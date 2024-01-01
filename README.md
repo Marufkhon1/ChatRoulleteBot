@@ -25,3 +25,5 @@ Note : I will also add stickers to like his behaviour, that is 👍👎♥️�
 8. Test and Iterate : I will test my bot to identity and any bugs or issues.Users will be  satisfied my bot soon
 
 9. Advertising Bot : I will advertise my bot to my friends,relatives and including my classmates.I will test also it will be proud of will be in channel or group.
+
+10. You can go in my bot https://t.me/chat_ruletka_uz_bot
