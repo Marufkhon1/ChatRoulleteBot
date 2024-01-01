@@ -1,0 +1,267 @@
+INFO:root:Bot is starting.
+INFO:root:Bot is starting.
+INFO:root:Bot is starting.
+INFO:root:Bot is starting.
+INFO:root:Bot is starting.
+INFO:root:Bot is starting.
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:User 123 added successfully
+INFO:root:Bot is starting.
+INFO:root:User 1 added successfully
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+ERROR:root:Error adding user 1: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(1)" уже существует.
+
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user123 added successfully
+INFO:root:User user1 updated age to 25
+INFO:root:User user1 updated gender to male
+INFO:root:User user123 added successfully
+INFO:root:User user1 updated gender to male
+INFO:root:User user123 added successfully
+INFO:root:User user1 updated age to 25
+INFO:root:User user1 updated gender to male
+INFO:root:User user123 added successfully
+INFO:root:User user1 updated age to 25
+INFO:root:User user1 updated gender to male
+INFO:root:User user123 added successfully
+INFO:root:User user1 updated gender to male
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated gender to male
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated gender to male
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:User user123 added successfully
+INFO:root:User 123 updated age to 30
+INFO:root:User 123 updated gender to male
+INFO:root:User 456 updated gender to female
+INFO:root:Bot is starting.
+ERROR:root:Error adding user 5108384454: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(5108384454)" уже существует.
+
+ERROR:root:Error adding user 5108384454: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(5108384454)" уже существует.
+
+INFO:root:Bot is starting.
+INFO:root:Bot is starting.
+ERROR:root:Error adding user 927887043: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(927887043)" уже существует.
+
+ERROR:root:Error adding user 5108384454: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(5108384454)" уже существует.
+
+ERROR:root:Error adding user 927887043: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(927887043)" уже существует.
+
+ERROR:root:Error adding user 5108384454: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(5108384454)" уже существует.
+
+ERROR:root:Error adding user 5108384454: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(5108384454)" уже существует.
+
+ERROR:root:Error adding user 5108384454: ОШИБКА:  повторяющееся значение ключа нарушает ограничение уникальности "users_pkey"
+DETAIL:  Ключ "(user_id)=(5108384454)" уже существует.
+
+INFO:root:Bot is starting.
+INFO:root:Bot is starting.
