@@ -121,11 +121,13 @@ def get_user_profile(user_id):
     cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
     profile_data = cursor.fetchone()
     conn.close()
+    
     if profile_data:
         profile = {
             'gender': '🙎‍♂Парень' if profile_data[1] == 'male' else '🙍‍♀Девушка',
             'age': profile_data[2],
-            'interest': 'Общение' if profile_data[3] == 'chat' else 'Интим 18+'
+            'interest': 'Общение' if profile_data[3] == 'chat' else 'Интим 18+',
+            'last_reaction': profile_data[4]
         }
         return profile
     else:

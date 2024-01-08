@@ -91,7 +91,7 @@ def handle_profile(message):
     user_id = message.from_user.id
     profile_data = get_user_profile(user_id)
     if profile_data:
-        profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}"
+        profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}\n👍 Последняя реакция - {profile_data.get('last_reaction', 'Нет информации')}"
         bot.send_message(message.chat.id, profile_text, reply_markup=create_profile_keyboard())
     else:
         bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию.')
@@ -195,17 +195,20 @@ def handle_find_partner(message):
 
 def handle_user_profile(user_id):
     user_profile = get_user_profile(user_id)
+    
     if user_profile is not None:
         gender = user_profile['gender']
         age = user_profile['age']
         interest = user_profile['interest']
+        last_reaction = user_profile.get('last_reaction')  # Use get to handle cases where 'last_reaction' is not in the dictionary
     else:
         # Set default values if user profile not found
         gender = '🙎‍♂Парень'
         age = 25
         interest = 'Общение'
+        last_reaction = None
 
-    add_user(user_id, gender, age, interest)
+    add_user(user_id, gender, age, interest, last_reaction)
 
 def handle_stop_search(message):
     bot.send_message(message.chat.id, '❌ Поиск остановлен. Напишите /menu')

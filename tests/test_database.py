@@ -21,7 +21,7 @@ class TestDatabaseFunctions(unittest.TestCase):
 
         # Assertions
         mock_cursor.execute.assert_called_once_with(
-            "INSERT INTO users (user_id, gender, age, interest) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO users (user_id, gender, age, interest, last_reaction) VALUES (%s, %s, %s, %s, NULL)",
             ('user123', 'male', 25, 'chat')
         )
         mock_connect.return_value.commit.assert_called_once()
@@ -184,6 +184,20 @@ class TestDatabaseFunctions(unittest.TestCase):
                     return result[0]
                 else:
                     return None
+
+    @patch('datasystem.database.psycopg2.connect')
+    def test_save_user_reaction(self, mock_connect):
+        mock_cursor = mock_connect.return_value.cursor.return_value
+
+        # Call the function
+        save_user_reaction('user123', 'like')
+
+        # Assertions
+        mock_cursor.execute.assert_called_once_with(
+            "UPDATE users SET last_reaction = %s WHERE user_id = %s",
+            ('like', 'user123')
+        )
+        mock_connect.return_value.commit.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()
