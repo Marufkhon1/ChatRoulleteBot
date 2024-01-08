@@ -132,10 +132,34 @@ def stop(message):
         # User is in an active chat
         delete_chat(chat_info[0])  # Delete the chat information, not the user
         bot.send_message(chat_info[1], '❌ Собеседник покинул чат', reply_markup=markup)
-        bot.send_message(user_id, '❌ Вы вышли из чата', reply_markup=markup)
+        bot.send_message(user_id, '❌ Вы вышли из чата. Оцените вашего собеседника:', reply_markup=create_reaction_inline_keyboard())
     else:
         # User is not in an active chat
         bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup)
+
+
+def create_reaction_inline_keyboard():
+    keyboard = types.InlineKeyboardMarkup()
+    like_button = types.InlineKeyboardButton('👍', callback_data='like')
+    dislike_button = types.InlineKeyboardButton('👎', callback_data='dislike')
+    heart_button = types.InlineKeyboardButton('♥️', callback_data='heart')
+    fire_button = types.InlineKeyboardButton('🔥', callback_data='fire')
+    ok_button = types.InlineKeyboardButton('👌', callback_data='ok')
+    cancel_button = types.InlineKeyboardButton('🚫', callback_data='cancel')
+    keyboard.row(like_button, dislike_button, heart_button)
+    keyboard.row(fire_button, ok_button, cancel_button)
+    return keyboard
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ['like', 'dislike', 'heart', 'fire', 'ok', 'cancel'])
+def handle_reaction_callback(call):
+    user_id = call.from_user.id
+    reaction = call.data
+
+    # Save the reaction in the database
+    save_user_reaction(user_id, reaction)
+
+    bot.send_message(user_id, f'Ваша оценка сохранена: {reaction}',reply_markup=create_main_keyboard())
 
 @bot.message_handler(content_types=['text'])
 def bot_message(message):

@@ -18,7 +18,7 @@ def add_user(user_id, gender, age, interest):
         conn = psycopg2.connect(**DATABASE)
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO users (user_id, gender, age, interest) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO users (user_id, gender, age, interest, last_reaction) VALUES (%s, %s, %s, %s, NULL)",
             (user_id, gender, age, interest)
         )
         conn.commit()
@@ -26,6 +26,7 @@ def add_user(user_id, gender, age, interest):
         logging.info(f"User {user_id} added successfully")
     except psycopg2.Error as e:
         logging.error(f"Error adding user {user_id}: {str(e)}")
+
 
 
 def user_exists(user_id):
@@ -137,5 +138,20 @@ def update_user_age(user_id, new_age):
     cursor.execute("UPDATE users SET age = %s WHERE user_id = %s", (new_age, user_id))
     conn.commit()
     conn.close()
+
+def save_user_reaction(user_id, reaction):
+    try:
+        conn = psycopg2.connect(**DATABASE)
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET last_reaction = %s WHERE user_id = %s",
+            (reaction, user_id)
+        )
+        conn.commit()
+        conn.close()
+        logging.info(f"User {user_id} reaction ({reaction}) saved successfully")
+    except psycopg2.Error as e:
+        logging.error(f"Error saving user {user_id} reaction: {str(e)}")
+
 
 
