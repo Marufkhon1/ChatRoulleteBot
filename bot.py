@@ -156,10 +156,31 @@ def handle_reaction_callback(call):
     user_id = call.from_user.id
     reaction = call.data
 
-    # Save the reaction in the database
+    # Save the reaction in the existing users table
     save_user_reaction(user_id, reaction)
 
-    bot.send_message(user_id, f'Ваша оценка сохранена: {reaction}',reply_markup=create_main_keyboard())
+    # Get the count of each reaction
+    like_count = get_reaction_count('like')
+    dislike_count = get_reaction_count('dislike')
+    heart_count = get_reaction_count('heart')
+    fire_count = get_reaction_count('fire')
+    ok_count = get_reaction_count('ok')
+    cancel_count = get_reaction_count('cancel')
+
+    # Update the message to reflect the saved reaction and counts
+    message_text = f'Ваша оценка сохранена: {reaction}\n\n'
+    message_text += f'👍 Лайк: {like_count}\n'
+    message_text += f'👎 Дизлайк: {dislike_count}\n'
+    message_text += f'♥️ Сердце: {heart_count}\n'
+    message_text += f'🔥 Огонь: {fire_count}\n'
+    message_text += f'👌 Ок: {ok_count}\n'
+    message_text += f'🚫 Отмена: {cancel_count}'
+
+    bot.send_message(user_id, message_text, reply_markup=create_main_keyboard())
+
+
+
+
 
 @bot.message_handler(content_types=['text'])
 def bot_message(message):

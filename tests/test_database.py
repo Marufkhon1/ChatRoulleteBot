@@ -17,12 +17,12 @@ class TestDatabaseFunctions(unittest.TestCase):
         mock_cursor = mock_connect.return_value.cursor.return_value
 
         # Call the function
-        add_user('user123', 'male', 25, 'chat')
+        add_user('user123', 'male', 25, 'chat','👍')
 
         # Assertions
         mock_cursor.execute.assert_called_once_with(
-            "INSERT INTO users (user_id, gender, age, interest, last_reaction) VALUES (%s, %s, %s, %s, NULL)",
-            ('user123', 'male', 25, 'chat')
+            "INSERT INTO users (user_id, gender, age, interest, last_reaction) VALUES (%s, %s, %s, %s, %s)",
+            ('user123', 'male', 25, 'chat','👍')
         )
         mock_connect.return_value.commit.assert_called_once()
 

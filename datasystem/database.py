@@ -13,13 +13,13 @@ DATABASE = {
 }
 
 
-def add_user(user_id, gender, age, interest):
+def add_user(user_id, gender, age, interest,last_reaction):
     try:
         conn = psycopg2.connect(**DATABASE)
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO users (user_id, gender, age, interest, last_reaction) VALUES (%s, %s, %s, %s, NULL)",
-            (user_id, gender, age, interest)
+            "INSERT INTO users (user_id, gender, age, interest, last_reaction) VALUES (%s, %s, %s, %s, %s)",
+            (user_id, gender, age, interest,last_reaction)
         )
         conn.commit()
         conn.close()
@@ -141,6 +141,8 @@ def update_user_age(user_id, new_age):
     conn.commit()
     conn.close()
 
+    
+
 def save_user_reaction(user_id, reaction):
     try:
         conn = psycopg2.connect(**DATABASE)
@@ -154,6 +156,22 @@ def save_user_reaction(user_id, reaction):
         logging.info(f"User {user_id} reaction ({reaction}) saved successfully")
     except psycopg2.Error as e:
         logging.error(f"Error saving user {user_id} reaction: {str(e)}")
+    
+# Function to get the count of a specific reaction
+def get_reaction_count(reaction_type):
+    try:
+        conn = psycopg2.connect(**DATABASE)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE last_reaction = %s",
+            (reaction_type,)
+        )
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count
+    except psycopg2.Error as e:
+        logging.error(f"Error getting count for reaction {reaction_type}: {str(e)}")
+        return 0
 
 
 
