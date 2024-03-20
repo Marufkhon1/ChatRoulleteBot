@@ -159,15 +159,14 @@ def handle_find_partner(message):
     item1 = types.KeyboardButton('❌ Остановить поиск')
     markup.add(item1)
 
-    if message.from_user.id not in searching_users:
-        # Add the user to the list of searching users
-        searching_users.append(message.from_user.id)
+    # Add the user to the end of the queue
+    searching_users.append(message.from_user.id)
 
-    # Check if there's another user searching for a partner
-    if len(searching_users) > 1:
-        # Pair the current user with the first user in the list
+    # Check if there are at least two users in the queue
+    if len(searching_users) >= 2:
+        # Pair the first two users in the queue
         chat_two = searching_users.pop(0)
-        chat_one = message.from_user.id
+        chat_one = searching_users.pop(0)
 
         # Create the chat
         if create_chat(chat_one, chat_two):
@@ -180,9 +179,11 @@ def handle_find_partner(message):
             bot.send_message(chat_one, mess, reply_markup=markup)
             bot.send_message(chat_two, mess, reply_markup=markup)
         else:
-            # If chat creation fails, inform the user and remove them from the list
+            # If chat creation fails, inform the users and re-add them to the queue
             bot.send_message(chat_one, 'Произошла ошибка при создании чата. Попробуйте еще раз.')
-            searching_users.remove(chat_one)
+            bot.send_message(chat_two, 'Произошла ошибка при создании чата. Попробуйте еще раз.')
+            searching_users.append(chat_one)
+            searching_users.append(chat_two)
     else:
         bot.send_message(message.chat.id, 'Ожидаем собеседника...', reply_markup=markup)
 
