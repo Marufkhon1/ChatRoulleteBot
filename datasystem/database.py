@@ -13,13 +13,13 @@ DATABASE = {
 }
 
 
-def add_user(user_id, gender, age, interest,last_reaction):
+def add_user(user_id, gender, age, interest):
     try:
         conn = psycopg2.connect(**DATABASE)
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO users (user_id, gender, age, interest, last_reaction) VALUES (%s, %s, %s, %s, %s)",
-            (user_id, gender, age, interest,last_reaction)
+            "INSERT INTO users (user_id, gender, age, interest) VALUES (%s, %s, %s, %s)",
+            (user_id, gender, age, interest)
         )
         conn.commit()
         conn.close()
@@ -127,7 +127,6 @@ def get_user_profile(user_id):
             'gender': '🙎‍♂Парень' if profile_data[1] == 'male' else '🙍‍♀Девушка',
             'age': profile_data[2],
             'interest': 'Общение' if profile_data[3] == 'chat' else 'Интим 18+',
-            'last_reaction': profile_data[4]
         }
         return profile
     else:
@@ -142,36 +141,6 @@ def update_user_age(user_id, new_age):
     conn.close()
 
     
-
-def save_user_reaction(user_id, reaction):
-    try:
-        conn = psycopg2.connect(**DATABASE)
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE users SET last_reaction = %s WHERE user_id = %s",
-            (reaction, user_id)
-        )
-        conn.commit()
-        conn.close()
-        logging.info(f"User {user_id} reaction ({reaction}) saved successfully")
-    except psycopg2.Error as e:
-        logging.error(f"Error saving user {user_id} reaction: {str(e)}")
-    
-# Function to get the count of a specific reaction
-def get_reaction_count(reaction_type):
-    try:
-        conn = psycopg2.connect(**DATABASE)
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE last_reaction = %s",
-            (reaction_type,)
-        )
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count
-    except psycopg2.Error as e:
-        logging.error(f"Error getting count for reaction {reaction_type}: {str(e)}")
-        return 0
 
 
 

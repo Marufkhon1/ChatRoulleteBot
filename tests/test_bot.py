@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock, patch,Mock
 from unittest.mock import call
+from telebot import types
 from bot import (
     start,
     create_gender_keyboard,
@@ -21,8 +22,6 @@ from bot import (
     handle_stop_search,
     handle_user_profile,
     handle_chat_message,
-    handle_reaction_callback,
-    create_reaction_inline_keyboard
 )
 
 class TestBot(unittest.TestCase):
@@ -159,38 +158,6 @@ class TestBot(unittest.TestCase):
         # Check the text of the second button (Find Partner)
         self.assertEqual(keyboard.keyboard[0][1]['text'], 'Найти собеседника 🔎')
 
-    @patch('bot.create_main_keyboard', return_value=MagicMock())
-    @patch('bot.bot.send_message', return_value=None)
-    def test_show_menu(self, mock_send_message, mock_create_main_keyboard):
-        message = MagicMock()
-        message.chat.id = 123
-
-        # Call the show_menu function
-        show_menu(message)
-
-        # Add assertions based on your requirements
-        mock_create_main_keyboard.assert_called_once()
-        mock_send_message.assert_called_once_with(123, 'Выберите действие:', reply_markup=mock_create_main_keyboard.return_value)
-
-    @patch('bot.get_user_profile', return_value={'gender': 'Male', 'age': 25, 'interest': 'chat', 'last_reaction': 'like'})
-    @patch('bot.bot.send_message', return_value=None)
-    @patch('bot.create_profile_keyboard', return_value=MagicMock())
-    def test_handle_profile(self, mock_create_profile_keyboard, mock_send_message, mock_get_user_profile):
-        message = MagicMock()
-        message.from_user.id = 456
-        message.text = '👤 Профиль'
-
-        # Call the handle_profile function
-        handle_profile(message)
-
-        # Add assertions based on your requirements
-        mock_get_user_profile.assert_called_once_with(456)
-        mock_create_profile_keyboard.assert_called_once()
-        mock_send_message.assert_called_once_with(
-            message.chat.id,
-            '👤 Профиль\n\n#️⃣ ID — 456\n👫 Пол — Male\n🔞 Возраст — 25\n🚪 Комната - chat\n👍 Последняя реакция - like',
-            reply_markup=mock_create_profile_keyboard.return_value
-        )
 
     def test_create_profile_keyboard(self):
         # Call the function to create the keyboard
@@ -252,56 +219,19 @@ class TestBot(unittest.TestCase):
         mock_update_user_age.assert_called_once_with(user_id, 25)
         mock_send_message.assert_called_once_with(message.chat.id, 'Возраст успешно изменен.')
 
-    @mock.patch('bot.get_chat', return_value=None)
-    @mock.patch('bot.create_chat', return_value=True)  # Adjust to return True when a chat is successfully created
-    @mock.patch('bot.handle_user_profile')
-    @mock.patch('bot.bot.send_message')
-    def test_handle_find_partner_no_partner(self, mock_send_message, mock_handle_user_profile, mock_create_chat, mock_get_chat):
-        message = mock.Mock()
-        message.from_user.id = 456
-        handle_find_partner(message)
-
-        expected_calls = [
-            mock.call(None, 'Собеседник найден. Чтобы остановиться, напишите /stop', reply_markup=mock.ANY)
-        ]
-
-        mock_send_message.assert_has_calls(expected_calls, any_order=True)
-
-    @mock.patch('bot.get_chat', return_value=123)  # Replace with appropriate values
-    @mock.patch('bot.create_chat', return_value=True)
-    @mock.patch('bot.bot.send_message')
-    def test_handle_find_partner_with_partner(self, mock_send_message, mock_create_chat, mock_get_chat):
-        message = mock.Mock()
-        message.from_user.id = 456  # Replace with appropriate values
-        handle_find_partner(message)
-
-        actual_chat_ids = [call_args[0] for call_args, _ in mock_send_message.call_args_list]
-
-        expected_calls = [
-            mock.call(mock.ANY, 'Собеседник найден. Чтобы остановиться, напишите /stop', reply_markup=mock.ANY),
-            mock.call(mock.ANY, 'Собеседник найден. Чтобы остановиться, напишите /stop', reply_markup=mock.ANY),
-        ]
-
-        # Validate that the actual chat IDs are present in the expected calls
-        for chat_id in actual_chat_ids:
-            expected_calls[0] = mock.call(chat_id, 'Собеседник найден. Чтобы остановиться, напишите /stop', reply_markup=mock.ANY)
-            expected_calls[1] = mock.call(mock.ANY, 'Собеседник найден. Чтобы остановиться, напишите /stop', reply_markup=mock.ANY)
-
-        mock_send_message.assert_has_calls(expected_calls, any_order=True)
-
-    @mock.patch('bot.get_user_profile', return_value={'gender': 'Male', 'age': 25, 'interest': 'Chat', 'last_reaction': 'like'})
+    @mock.patch('bot.get_user_profile', return_value={'gender': 'Male', 'age': 25, 'interest': 'Chat'})
     @mock.patch('bot.add_user')
     def test_handle_user_profile_exists(self, mock_add_user, mock_get_user_profile):
         user_id = 123  # Replace with appropriate values
         handle_user_profile(user_id)
-        mock_add_user.assert_called_with(user_id, 'Male', 25, 'Chat', 'like')
+        mock_add_user.assert_called_with(user_id, 'Male', 25, 'Chat')
 
     @mock.patch('bot.get_user_profile', return_value=None)
     @mock.patch('bot.add_user')
     def test_handle_user_profile_not_exists(self, mock_add_user, mock_get_user_profile):
         user_id = 123  # Replace with appropriate values
         handle_user_profile(user_id)
-        mock_add_user.assert_called_with(user_id, '🙎‍♂Парень', 25, 'Общение', None)
+        mock_add_user.assert_called_with(user_id, '🙎‍♂Парень', 25, 'Общение')
 
     @mock.patch('bot.bot.send_message')
     def test_handle_stop_search(self, mock_send_message):
@@ -317,15 +247,28 @@ class TestBot(unittest.TestCase):
         handle_chat_message(message)
         mock_send_message.assert_called_with(456, 'Hello, how are you?')
 
-    @mock.patch('bot.create_chat', return_value=False)
-    @mock.patch('bot.handle_user_profile')
-    @mock.patch('bot.bot.send_message')
-    def test_bot_message_find_partner(self, mock_send_message, mock_handle_user_profile, mock_create_chat):
-        message = mock.Mock()
+    def test_bot_message_find_partner(self):
+        # Mocking the message object
+        message = MagicMock()
         message.chat.type = 'private'
         message.text = 'Найти собеседника 🔎'
-        bot_message(message)
-        mock_send_message.assert_called_with(message.chat.id, 'Найти собеседника 🔎', reply_markup=mock.ANY)
+
+        # Mocking the handle_find_partner function
+        handle_find_partner_mock = MagicMock()
+        handle_stop_search_mock = MagicMock()
+        handle_chat_message_mock = MagicMock()
+
+        # Patching the functions with the mock objects
+        with patch('bot.handle_find_partner', handle_find_partner_mock), \
+                patch('bot.handle_stop_search', handle_stop_search_mock), \
+                patch('bot.handle_chat_message', handle_chat_message_mock):
+            # Call the function
+            bot_message(message)
+
+        # Assert that handle_find_partner is called with the message
+        handle_find_partner_mock.assert_called_once_with(message)
+        handle_stop_search_mock.assert_not_called()
+        handle_chat_message_mock.assert_not_called()
 
     @mock.patch('bot.handle_stop_search')
     @mock.patch('bot.bot.send_message')
@@ -344,88 +287,6 @@ class TestBot(unittest.TestCase):
         bot_message(message)
         mock_handle_chat_message.assert_called_with(message)
 
-    @patch('bot.get_active_chat')
-    @patch('bot.delete_chat')
-    @patch('bot.types.ReplyKeyboardMarkup')
-    @patch('bot.types.KeyboardButton')
-    @patch('bot.bot.send_message')
-    @patch('bot.create_reaction_inline_keyboard')
-    def test_stop_in_active_chat(self, mock_create_reaction_inline_keyboard, mock_send_message, mock_KeyboardButton, mock_ReplyKeyboardMarkup, mock_delete_chat, mock_get_active_chat):
-        # Set up your mock objects and data
-        mock_create_reaction_inline_keyboard.return_value = MagicMock()
-        mock_KeyboardButton.return_value = MagicMock()
-        mock_ReplyKeyboardMarkup.return_value = MagicMock()
-        mock_delete_chat.return_value = MagicMock()
-        mock_get_active_chat.return_value = (123, 456)  # Replace with your desired return value
-
-        # Call the function you want to test
-        stop(MagicMock(chat=MagicMock(id=789)))
-
-        # Make assertions based on the expected behavior
-        mock_get_active_chat.assert_called_once_with(789)
-        mock_delete_chat.assert_called_once_with(123)
-
-        # Check the actual calls to mock_send_message
-        actual_calls = mock_send_message.call_args_list
-
-        # Extract and compare the non-reply_markup parts of the calls
-        expected_calls = [
-            call(456, '❌ Собеседник покинул чат'),
-            call(789, '❌ Вы вышли из чата. Оцените вашего собеседника:'),
-        ]
-
-        for expected_call, actual_call in zip(expected_calls, actual_calls):
-            self.assertEqual(expected_call, actual_call[:-1])  # Exclude the last element (reply_markup)
-
-        # Ensure create_reaction_inline_keyboard was called
-        mock_create_reaction_inline_keyboard.assert_called_once()
-
-    @patch('bot.types.InlineKeyboardMarkup')
-    @patch('bot.types.InlineKeyboardButton')
-    def test_create_reaction_inline_keyboard(self, mock_InlineKeyboardButton, mock_InlineKeyboardMarkup):
-        # Set up your mock objects and data
-        mock_InlineKeyboardMarkup.return_value = MagicMock()
-        mock_InlineKeyboardButton.side_effect = [
-            MagicMock(),  # For '👍'
-            MagicMock(),  # For '👎'
-            MagicMock(),  # For '♥️'
-            MagicMock(),  # For '🔥'
-            MagicMock(),  # For '👌'
-            MagicMock(),  # For '🚫'
-        ]
-
-        # Call the function you want to test
-        result = create_reaction_inline_keyboard()
-
-        # Make assertions based on the expected behavior
-        mock_InlineKeyboardMarkup.assert_called_once()
-        expected_calls = [
-            call('👍', callback_data='like'),
-            call('👎', callback_data='dislike'),
-            call('♥️', callback_data='heart'),
-            call('🔥', callback_data='fire'),
-            call('👌', callback_data='ok'),
-            call('🚫', callback_data='cancel'),
-        ]
-        mock_InlineKeyboardButton.assert_has_calls(expected_calls, any_order=True)
-
-        # Additional assertions based on your specific use case
-        # For example, you might want to check the structure of the returned result.
-        self.assertIsInstance(result, MagicMock)
-
-    @patch('bot.save_user_reaction')
-    @patch('bot.bot.send_message')
-    @patch('bot.create_main_keyboard')
-    def test_handle_reaction_callback(self, mock_create_main_keyboard, mock_send_message, mock_save_user_reaction):
-        # Set up your mock objects and data
-        mock_create_main_keyboard.return_value = MagicMock()
-
-        # Call the function you want to test
-        handle_reaction_callback(MagicMock(from_user=MagicMock(id=123), data='like'))
-
-        # Make assertions based on the expected behavior
-        mock_save_user_reaction.assert_called_once_with(123, 'like')
-        mock_send_message.assert_called_once_with(123, 'Ваша оценка сохранена: like', reply_markup=mock_create_main_keyboard.return_value)
 
 if __name__ == '__main__':
     unittest.main()

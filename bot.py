@@ -84,7 +84,7 @@ def create_main_keyboard():
 @bot.message_handler(commands=['menu'])
 def show_menu(message):
     markup = create_main_keyboard()
-    bot.send_message(message.chat.id, 'Выберите действие:', reply_markup=markup)
+    bot.send_message(message.chat.id, '❌ Вы вышли из чата.', reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text == '👤 Профиль')
 def handle_profile(message):
@@ -132,53 +132,12 @@ def stop(message):
         # User is in an active chat
         delete_chat(chat_info[0])  # Delete the chat information, not the user
         bot.send_message(chat_info[1], '❌ Собеседник покинул чат', reply_markup=markup)
-        bot.send_message(user_id, '❌ Вы вышли из чата. Оцените вашего собеседника:', reply_markup=create_reaction_inline_keyboard())
+        bot.send_message(user_id, 'Выберите действие:', reply_markup=show_menu(message))
     else:
         # User is not in an active chat
-        bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup)
+        bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup) 
 
-
-def create_reaction_inline_keyboard():
-    keyboard = types.InlineKeyboardMarkup()
-    like_button = types.InlineKeyboardButton('👍', callback_data='like')
-    dislike_button = types.InlineKeyboardButton('👎', callback_data='dislike')
-    heart_button = types.InlineKeyboardButton('♥️', callback_data='heart')
-    fire_button = types.InlineKeyboardButton('🔥', callback_data='fire')
-    ok_button = types.InlineKeyboardButton('👌', callback_data='ok')
-    cancel_button = types.InlineKeyboardButton('🚫', callback_data='cancel')
-    keyboard.row(like_button, dislike_button, heart_button)
-    keyboard.row(fire_button, ok_button, cancel_button)
-    return keyboard
-
-
-@bot.callback_query_handler(func=lambda call: call.data in ['like', 'dislike', 'heart', 'fire', 'ok', 'cancel'])
-def handle_reaction_callback(call):
-    user_id = call.from_user.id
-    reaction = call.data
-
-    # Save the reaction in the existing users table
-    save_user_reaction(user_id, reaction)
-
-    # Get the count of each reaction
-    like_count = get_reaction_count('like')
-    dislike_count = get_reaction_count('dislike')
-    heart_count = get_reaction_count('heart')
-    fire_count = get_reaction_count('fire')
-    ok_count = get_reaction_count('ok')
-    cancel_count = get_reaction_count('cancel')
-
-    # Update the message to reflect the saved reaction and counts
-    message_text = f'Ваша оценка сохранена: {reaction}\n\n'
-    message_text += f'👍 Лайк: {like_count}\n'
-    message_text += f'👎 Дизлайк: {dislike_count}\n'
-    message_text += f'♥️ Сердце: {heart_count}\n'
-    message_text += f'🔥 Огонь: {fire_count}\n'
-    message_text += f'👌 Ок: {ok_count}\n'
-    message_text += f'🚫 Отмена: {cancel_count}'
-
-    bot.send_message(user_id, message_text, reply_markup=create_main_keyboard())
-
-
+searching_users = []
 
 
 
@@ -194,25 +153,39 @@ def bot_message(message):
 
 
 def handle_find_partner(message):
+    global searching_users
+    
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     item1 = types.KeyboardButton('❌ Остановить поиск')
     markup.add(item1)
 
-    chat_two = get_chat()
+    if message.from_user.id not in searching_users:
+        # Add the user to the list of searching users
+        searching_users.append(message.from_user.id)
 
-    if create_chat(message.chat.id, chat_two) is False:
-        user_id = message.from_user.id
-        handle_user_profile(user_id)
+    # Check if there's another user searching for a partner
+    if len(searching_users) > 1:
+        # Pair the current user with the first user in the list
+        chat_two = searching_users.pop(0)
+        chat_one = message.from_user.id
 
-        bot.send_message(message.chat.id, 'Найти собеседника 🔎', reply_markup=markup)
+        # Create the chat
+        if create_chat(chat_one, chat_two):
+            mess = 'Собеседник найден. Чтобы остановиться, напишите /stop'
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            item1 = types.KeyboardButton('/stop')
+            markup.add(item1)
+
+            # Inform both users about the pairing
+            bot.send_message(chat_one, mess, reply_markup=markup)
+            bot.send_message(chat_two, mess, reply_markup=markup)
+        else:
+            # If chat creation fails, inform the user and remove them from the list
+            bot.send_message(chat_one, 'Произошла ошибка при создании чата. Попробуйте еще раз.')
+            searching_users.remove(chat_one)
     else:
-        mess = 'Собеседник найден. Чтобы остановиться, напишите /stop'
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item1 = types.KeyboardButton('/stop')
-        markup.add(item1)
+        bot.send_message(message.chat.id, 'Ожидаем собеседника...', reply_markup=markup)
 
-        bot.send_message(message.chat.id, mess, reply_markup=markup)
-        bot.send_message(chat_two, mess, reply_markup=markup)
 
 def handle_user_profile(user_id):
     user_profile = get_user_profile(user_id)
@@ -221,17 +194,20 @@ def handle_user_profile(user_id):
         gender = user_profile['gender']
         age = user_profile['age']
         interest = user_profile['interest']
-        last_reaction = user_profile.get('last_reaction')  # Use get to handle cases where 'last_reaction' is not in the dictionary
     else:
         # Set default values if user profile not found
         gender = '🙎‍♂Парень'
         age = 25
         interest = 'Общение'
-        last_reaction = None
 
-    add_user(user_id, gender, age, interest, last_reaction)
+    add_user(user_id, gender, age, interest)
 
 def handle_stop_search(message):
+    global searching_users
+    
+    # Remove the user from the list of searching users
+    if message.from_user.id in searching_users:
+        searching_users.remove(message.from_user.id)
     bot.send_message(message.chat.id, '❌ Поиск остановлен. Напишите /menu')
 
 def handle_chat_message(message):
