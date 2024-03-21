@@ -15,6 +15,16 @@ logging.basicConfig(filename='C:\\Users\\mmman\\OneDrive\\Рабочий сто�
 
 bot = telebot.TeleBot(TOKEN_BOT)
 
+CHANNEL_ID = -1002044984398
+
+def user_subscribed_channel(user_id):
+    try:
+        chat_member = bot.get_chat_member(CHANNEL_ID, user_id)
+        return chat_member.status in ['member', 'administrator', 'creator']
+    except Exception as e:
+        print("Error checking channel subscription:", e)
+        return False
+
 @bot.message_handler(commands=['start'])
 def start(message):
     user_id = message.from_user.id
@@ -67,10 +77,17 @@ def handle_interest_selection(call):
 def handle_age(message):
     user_id = message.from_user.id
     age = int(message.text)
+    
+    # Check if user has already completed registration
+    if user_exists(user_id):
+        bot.send_message(message.chat.id, '❌ Вы уже зарегистрированы.')
+        return
+    
     # Save age to the database
     markup = create_main_keyboard()
     save_user_age(user_id, age)
     bot.send_message(message.chat.id, '✅ Регистрация успешно завершена. Профиль создан.', reply_markup=markup)
+
 
 
 def create_main_keyboard():
@@ -190,8 +207,6 @@ def handle_find_partner(message):
         send_waiting_message()  # Call the helper function when there's only one user in the queue
 
 
-
-
 def handle_user_profile(user_id):
     user_profile = get_user_profile(user_id)
     
@@ -217,7 +232,27 @@ def handle_stop_search(message):
 
 def handle_chat_message(message):
     chat_info = get_active_chat(message.chat.id)
-    bot.send_message(chat_info[1], message.text)
+    
+    # Check if chat_info is not False (indicating chat is active)
+    if chat_info:
+        bot.send_message(chat_info[1], message.text)
+    else:
+
+        if not user_subscribed_channel:
+            markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
+            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
+            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
+            markup.add(subscribe_button, continue_button)
+            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+            return
+        
+        else:
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            item1 = types.KeyboardButton('👤 Профиль')
+            item2 = types.KeyboardButton('Найти собеседника 🔎')
+            markup.add(item1, item2)
+            bot.send_message(message.chat.id, "❌ Неверное сообщение. Пожалуйста, следуйте процедуре регистрации или используйте действительные команды.",reply_markup=markup)
+
 
 print("==========================================")
 print('                                         ')

@@ -63,25 +63,21 @@ def create_chat(chat_one, chat_two):
 def get_active_chat(chat_id):
     with psycopg2.connect(**DATABASE) as conn:
         with conn.cursor() as cursor:
+            # Check if chat_one matches the provided chat_id
             cursor.execute("SELECT * FROM chats WHERE chat_one = %s::text", (str(chat_id),))
-            id_chat = 0
-            chat_info = None  # Initialize chat_info to None
+            row = cursor.fetchone()  # Fetch only one row if found
+            if row:
+                return [row[0], row[2]]  # Return chat_info
 
-            for row in cursor.fetchall():
-                id_chat = row[0]
-                chat_info = [row[0], row[2]]
+            # Check if chat_two matches the provided chat_id
+            cursor.execute("SELECT * FROM chats WHERE chat_two = %s::text", (str(chat_id),))
+            row = cursor.fetchone()  # Fetch only one row if found
+            if row:
+                return [row[0], row[1]]  # Return chat_info
 
-            if id_chat == 0:
-                cursor.execute("SELECT * FROM chats WHERE chat_two = %s::text", (str(chat_id),))
-                for row in cursor.fetchall():
-                    id_chat = row[0]
-                    chat_info = [row[0], row[1]]
+            # If no chat is found, return False
+            return False
 
-            # Only return chat_info if the chat is found
-            if id_chat == 0:
-                return False
-            else:
-                return chat_info
 
 
    
