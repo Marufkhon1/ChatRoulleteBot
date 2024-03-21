@@ -91,7 +91,7 @@ def handle_profile(message):
     user_id = message.from_user.id
     profile_data = get_user_profile(user_id)
     if profile_data:
-        profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}\n👍 Последняя реакция - {profile_data.get('last_reaction', 'Нет информации')}"
+        profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}"
         bot.send_message(message.chat.id, profile_text, reply_markup=create_profile_keyboard())
     else:
         bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию.')
@@ -132,14 +132,9 @@ def stop(message):
         # User is in an active chat
         delete_chat(chat_info[0])  # Delete the chat information, not the user
         bot.send_message(chat_info[1], '❌ Собеседник покинул чат', reply_markup=markup)
-        bot.send_message(user_id, 'Выберите действие:', reply_markup=show_menu(message))
     else:
         # User is not in an active chat
         bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup) 
-
-searching_users = []
-
-
 
 @bot.message_handler(content_types=['text'])
 def bot_message(message):
@@ -152,6 +147,8 @@ def bot_message(message):
             handle_chat_message(message)
 
 
+searching_users = []
+
 def handle_find_partner(message):
     global searching_users
     
@@ -161,6 +158,11 @@ def handle_find_partner(message):
 
     # Add the user to the end of the queue
     searching_users.append(message.from_user.id)
+
+    # Helper function to send message when there's only one user in the queue
+    def send_waiting_message():
+        if len(searching_users) == 1:
+            bot.send_message(message.chat.id, 'Ожидаем собеседника...', reply_markup=markup)
 
     # Check if there are at least two users in the queue
     if len(searching_users) >= 2:
@@ -185,7 +187,9 @@ def handle_find_partner(message):
             searching_users.append(chat_one)
             searching_users.append(chat_two)
     else:
-        bot.send_message(message.chat.id, 'Ожидаем собеседника...', reply_markup=markup)
+        send_waiting_message()  # Call the helper function when there's only one user in the queue
+
+
 
 
 def handle_user_profile(user_id):

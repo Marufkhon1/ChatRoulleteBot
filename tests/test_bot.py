@@ -17,14 +17,31 @@ from bot import (
     handle_change_profile,
     process_new_age,
     stop,
-    handle_find_partner,
     bot_message,
     handle_stop_search,
     handle_user_profile,
     handle_chat_message,
+    handle_find_partner
 )
 
 class TestBot(unittest.TestCase):
+
+    @mock.patch('bot.create_chat')
+    @mock.patch('bot.bot')
+    def test_queue_length_greater_than_or_equal_to_two(self, mock_bot, mock_create_chat):
+        # Test scenario when there are at least two users in the queue
+        message = mock.Mock()
+        message.from_user.id = 1
+        searching_users = [2]
+
+        mock_create_chat.return_value = True
+
+        handle_find_partner(message)
+
+        # Assert the expected behavior
+        expected_message = 'Собеседник найден. Чтобы остановиться, напишите /stop'
+        mock_bot.send_message.assert_called_once()
+
     @patch('bot.user_exists', return_value=False)  # Mock the user_exists function
     @patch('bot.create_gender_keyboard', return_value=MagicMock())  # Mock the create_gender_keyboard function
     @patch('bot.bot.send_message', return_value=None)  # Mock the bot.send_message function
@@ -44,6 +61,56 @@ class TestBot(unittest.TestCase):
             mock.call(message.chat.id, 'Привет!\n\nЯ помогу тебе найти друзей или просто пообщаться со случайными людьми.'),
             mock.call(message.chat.id, '📝 Регистрация\n👣 Шаг 1 из 3\n\nВыбери ниже, какого ты пола?', reply_markup=mock.ANY),
         ],  any_order=False)
+
+    def test_handle_profile_with_profile_data(self):
+        mock_message = mock.Mock()
+        mock_message.text = '👤 Профиль'
+        mock_message.from_user.id = 123456789  # Example user ID
+        mock_profile_data = {'gender': 'Male', 'age': 25, 'interest': 'Music'}
+        
+        with mock.patch('bot.get_user_profile', return_value=mock_profile_data):
+            with mock.patch('bot.bot.send_message') as mock_send_message:
+                handle_profile(mock_message)
+                mock_send_message.assert_called_once()
+
+    def test_handle_profile_without_profile_data(self):
+        mock_message = mock.Mock()
+        mock_message.text = '👤 Профиль'
+        mock_message.from_user.id = 123456789  # Example user ID
+        
+        with mock.patch('bot.get_user_profile', return_value=None):
+            with mock.patch('bot.bot.send_message') as mock_send_message:
+                handle_profile(mock_message)
+                mock_send_message.assert_called_once_with(mock_message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию.')
+
+    def test_show_menu(self):
+        mock_message = mock.Mock()
+        mock_message.chat.id = 123456789  # Example chat ID
+
+        with mock.patch('bot.bot.send_message') as mock_send_message:
+            show_menu(mock_message)
+            mock_send_message.assert_called_once_with(mock_message.chat.id, '❌ Вы вышли из чата.', reply_markup=mock.ANY)
+
+    def test_stop_user_in_active_chat(self):
+        mock_message = mock.Mock()
+        mock_message.chat.id = 123456789  # Example chat ID
+        mock_chat_info = ('active_chat_id', 'partner_chat_id')  # Example chat information
+
+        with mock.patch('bot.bot.send_message') as mock_send_message:
+            with mock.patch('bot.get_active_chat', return_value=mock_chat_info):
+                with mock.patch('bot.delete_chat') as mock_delete_chat:
+                    stop(mock_message)
+                    mock_send_message.assert_called_once_with('partner_chat_id', '❌ Собеседник покинул чат', reply_markup=mock.ANY)
+                    mock_delete_chat.assert_called_once_with('active_chat_id')
+
+    def test_stop_user_not_in_active_chat(self):
+        mock_message = mock.Mock()
+        mock_message.chat.id = 123456789  # Example chat ID
+
+        with mock.patch('bot.bot.send_message') as mock_send_message:
+            with mock.patch('bot.get_active_chat', return_value=None):
+                stop(mock_message)
+                mock_send_message.assert_called_once_with(123456789, '❌ Вы не начали чат', reply_markup=mock.ANY)
 
     def test_create_gender_keyboard(self):
         # Call the function to create the keyboard
