@@ -196,10 +196,14 @@ def handle_change_profile(call):
 
 def process_new_age(message):
     user_id = message.from_user.id
-    new_age = int(message.text)
-    # Update the age in the database
-    update_user_age(user_id, new_age)
-    bot.send_message(message.chat.id, '✅Возраст успешно изменен.')
+    try:
+        new_age = int(message.text)
+        # Update the age in the database
+        update_user_age(user_id, new_age)
+        bot.send_message(message.chat.id, '✅ Возраст успешно изменен.',reply_markup=create_main_keyboard())
+    except ValueError:
+        bot.send_message(message.chat.id, '❌ Неверный формат возраста. Пожалуйста, введите число.')
+
 
  
 
@@ -226,24 +230,29 @@ def stop(message):
         return
     else:
         if chat_info:
-            global left_user_id
-            left_user_id = user_id  # Store the user ID of the person who left
-            delete_chat(chat_info[0]) 
-            bot.send_message(chat_info[1], '❌ Собеседник покинул чат', reply_markup=markup)
-            bot.send_message(user_id, '❌ Вы вышли из чата', reply_markup=markup)
-            # Ask for reaction
-            reaction_markup = types.InlineKeyboardMarkup(row_width=3)
-            item1 = types.InlineKeyboardButton('👍', callback_data='reaction_👍')
-            item2 = types.InlineKeyboardButton('👎', callback_data='reaction_👎')
-            item3 = types.InlineKeyboardButton('♥️', callback_data='reaction_♥️')
-            item4 = types.InlineKeyboardButton('🔥', callback_data='reaction_🔥')
-            item5 = types.InlineKeyboardButton('👌', callback_data='reaction_👌')
-            item6 = types.InlineKeyboardButton('🚫', callback_data='reaction_🚫')
-            reaction_markup.add(item1, item2, item3, item4, item5, item6)
+            if left_user_id is None:
+                # Store the user ID of the person who initiated the stop command
+                left_user_id = user_id  
+                bot.send_message(user_id, '✋ Подождите, пока ваш собеседник завершит чат.')
+            else:
+                # Both users are present, initiate the reaction process
+                delete_chat(chat_info[0]) 
+                bot.send_message(chat_info[1], '❌ Собеседник покинул чат', reply_markup=markup)
+                bot.send_message(user_id, '❌ Вы вышли из чата', reply_markup=markup)
+                # Ask for reaction
+                reaction_markup = types.InlineKeyboardMarkup(row_width=3)
+                item1 = types.InlineKeyboardButton('👍', callback_data='reaction_👍')
+                item2 = types.InlineKeyboardButton('👎', callback_data='reaction_👎')
+                item3 = types.InlineKeyboardButton('♥️', callback_data='reaction_♥️')
+                item4 = types.InlineKeyboardButton('🔥', callback_data='reaction_🔥')
+                item5 = types.InlineKeyboardButton('👌', callback_data='reaction_👌')
+                item6 = types.InlineKeyboardButton('🚫', callback_data='reaction_🚫')
+                reaction_markup.add(item1, item2, item3, item4, item5, item6)
 
-            bot.send_message(chat_info[1], 'Пожалуйста, реагируйте на действия собеседника смайлами ✨:', reply_markup=reaction_markup)
+                bot.send_message(chat_info[1], 'Пожалуйста, реагируйте на действия собеседника смайлами ✨:', reply_markup=reaction_markup)
         else:
             bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup)
+
 
 # Define a dictionary to keep track of reactions that have been saved during the current session
 saved_reactions = {}
@@ -338,23 +347,6 @@ def handle_find_partner(message):
         else:
             send_waiting_message() 
 
-
-
-def handle_user_profile(user_id):
-    user_profile = get_user_profile(user_id)
-    
-    if user_profile is not None:
-        gender = user_profile['gender']
-        age = user_profile['age']
-        interest = user_profile['interest']
-    else:
-        # Set default values if user profile not found
-        gender = '🙎‍♂Парень'
-        age = 25
-        interest = 'Общение'
-
-    add_user(user_id, gender, age, interest)
-
 def handle_stop_search(message):
     global searching_users
     
@@ -389,11 +381,16 @@ def handle_chat_message(message):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('continue_registration'))
 def after_subscribing(call):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    item1 = types.KeyboardButton('👤 Профиль')
-    item2 = types.KeyboardButton('Найти собеседника 🔎')
-    markup.add(item1, item2)
-    bot.send_message(call.message.chat.id, '✅ Вы успешно подписаны', reply_markup=markup)
+    user_id = call.message.chat.id
+    if user_subscribed_channel(user_id):
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        item1 = types.KeyboardButton('👤 Профиль')
+        item2 = types.KeyboardButton('Найти собеседника 🔎')
+        markup.add(item1, item2)
+        bot.send_message(user_id, '✅ Вы успешно подписаны', reply_markup=markup)
+    else:
+        # User did not follow and press continue registration
+        bot.send_message(user_id, '❌ Пожалуйста, подпишитесь на наши каналы перед продолжением.')
 
 
 print("==========================================")
