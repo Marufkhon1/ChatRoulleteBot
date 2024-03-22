@@ -144,37 +144,40 @@ def show_menu(message):
 def handle_profile(message):
     user_id = message.from_user.id
     if not user_subscribed_channel(user_id):
-            markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
-            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-            markup.add(subscribe_button, continue_button)
-            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
-            return
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
+        continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
+        markup.add(subscribe_button, continue_button)
+        bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+        return
     else:
         profile_data = get_user_profile(user_id)
         if profile_data:
+            # Fetch reactions data
+            reactions_data = get_user_reactions(user_id)
+            
+            # Create profile text
             profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}"
+            
+            # Add reactions data to profile text
+            if reactions_data:
+                profile_text += "\n\n👍: {}  👎: {}  ♥️: {}  🔥: {}  👌: {}  🚫: {}".format(
+                    reactions_data.get('👍', 0),
+                    reactions_data.get('👎', 0),
+                    reactions_data.get('♥️', 0),
+                    reactions_data.get('🔥', 0),
+                    reactions_data.get('👌', 0),
+                    reactions_data.get('🚫', 0)
+                )
+
             bot.send_message(message.chat.id, profile_text, reply_markup=create_profile_keyboard())
         else:
             bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию.')
 
+
 @bot.message_handler(commands=['profile'])
 def profile(message):
-    user_id = message.from_user.id
-    if not user_subscribed_channel(user_id):
-            markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
-            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-            markup.add(subscribe_button, continue_button)
-            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
-            return
-    else:
-        profile_data = get_user_profile(user_id)
-        if profile_data:
-            profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}"
-            bot.send_message(message.chat.id, profile_text, reply_markup=create_profile_keyboard())
-        else:
-            bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию.')
+    handle_profile(message)
 
 def create_profile_keyboard():
     keyboard = types.InlineKeyboardMarkup()
@@ -190,6 +193,7 @@ def handle_change_profile(call):
         bot.send_message(call.message.chat.id, 'Напиши новый возраст:')
         bot.register_next_step_handler(call.message, process_new_age)
 
+
 def process_new_age(message):
     user_id = message.from_user.id
     new_age = int(message.text)
@@ -197,9 +201,14 @@ def process_new_age(message):
     update_user_age(user_id, new_age)
     bot.send_message(message.chat.id, '✅Возраст успешно изменен.')
 
+ 
+
+left_user_id = None
 
 @bot.message_handler(commands=['stop'])
 def stop(message):
+    global left_user_id
+    
     user_id = message.chat.id
     chat_info = get_active_chat(user_id)
     
@@ -209,19 +218,59 @@ def stop(message):
     markup.add(item1, item2)
 
     if not user_subscribed_channel(user_id):
-            markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
-            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-            markup.add(subscribe_button, continue_button)
-            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
-            return
+        markup = types.InlineKeyboardMarkup(row_width=1)  
+        subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
+        continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
+        markup.add(subscribe_button, continue_button)
+        bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+        return
     else:
         if chat_info:
+            global left_user_id
+            left_user_id = user_id  # Store the user ID of the person who left
             delete_chat(chat_info[0]) 
             bot.send_message(chat_info[1], '❌ Собеседник покинул чат', reply_markup=markup)
             bot.send_message(user_id, '❌ Вы вышли из чата', reply_markup=markup)
+            # Ask for reaction
+            reaction_markup = types.InlineKeyboardMarkup(row_width=3)
+            item1 = types.InlineKeyboardButton('👍', callback_data='reaction_👍')
+            item2 = types.InlineKeyboardButton('👎', callback_data='reaction_👎')
+            item3 = types.InlineKeyboardButton('♥️', callback_data='reaction_♥️')
+            item4 = types.InlineKeyboardButton('🔥', callback_data='reaction_🔥')
+            item5 = types.InlineKeyboardButton('👌', callback_data='reaction_👌')
+            item6 = types.InlineKeyboardButton('🚫', callback_data='reaction_🚫')
+            reaction_markup.add(item1, item2, item3, item4, item5, item6)
+
+            bot.send_message(chat_info[1], 'Пожалуйста, реагируйте на действия собеседника смайлами ✨:', reply_markup=reaction_markup)
         else:
-            bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup) 
+            bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup)
+
+# Define a dictionary to keep track of reactions that have been saved during the current session
+saved_reactions = {}
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('reaction_'))
+def handle_reaction(call):
+    global left_user_id
+    global saved_reactions
+    
+    reaction = call.data.split('_')[1]  # Extract the reaction from the callback data
+    
+    if left_user_id is None:
+        # Handle the case where left_user_id is not set (unexpected behavior)
+        bot.answer_callback_query(call.id, "Error: left_user_id not set")
+        return
+    
+    if left_user_id in saved_reactions:
+        # If the reaction has already been saved for this user, send a message indicating so
+        bot.answer_callback_query(call.id, "You have already saved a reaction")
+    else:
+        # Save the reaction into the database associated with the user who left
+        save_reaction(left_user_id, reaction)
+        saved_reactions[left_user_id] = reaction  # Mark the reaction as saved for this user
+        
+        # Send a message confirming the reaction and sending the menu
+        bot.send_message(call.message.chat.id, "Your reaction has been saved to your partner's database.")
+        create_main_keyboard()
 
 @bot.message_handler(content_types=['text'])
 def bot_message(message):

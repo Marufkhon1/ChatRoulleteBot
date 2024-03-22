@@ -1,6 +1,7 @@
 import psycopg2
 from psycopg2 import sql
 import logging
+import json
 from bot import logging
 
 
@@ -136,7 +137,70 @@ def update_user_age(user_id, new_age):
     conn.commit()
     conn.close()
 
-    
+def save_reaction(partner_user_id, reaction):
+    conn = psycopg2.connect(**DATABASE)
+    cur = conn.cursor()
+    try:
+        # Get the current reactions for the partner user
+        cur.execute("SELECT reactions FROM users WHERE user_id = %s", (partner_user_id,))
+        row = cur.fetchone()
+        
+        # If no row is found, log the error and return
+        if row is None:
+            print("User ID not found:", partner_user_id)
+            return
+        
+        current_reactions_json = row[0]
+        
+        # If there are no reactions yet, initialize an empty dictionary
+        if current_reactions_json is None:
+            current_reactions = {}
+        else:
+            current_reactions = current_reactions_json
+        
+        # Update the count for the reaction
+        current_reactions[reaction] = current_reactions.get(reaction, 0) + 1
+        
+        # Convert the dictionary to a JSON string
+        updated_reactions_json = json.dumps(current_reactions)
+        
+        # Update the user's record with the new reactions
+        cur.execute("UPDATE users SET reactions = %s WHERE user_id = %s", (updated_reactions_json, partner_user_id))
+        
+        conn.commit()
+        print("Reaction saved successfully.")
+    except psycopg2.Error as e:
+        print("Error saving reaction:", e)
+    finally:
+        cur.close()
+        conn.close()
+
+def get_user_reactions(user_id):
+    conn = psycopg2.connect(**DATABASE)
+    cur = conn.cursor()
+    try:
+        # Fetch reactions data for the user
+        cur.execute("SELECT reactions FROM users WHERE user_id = %s", (user_id,))
+        row = cur.fetchone()
+        
+        # If no row is found, return an empty dictionary
+        if row is None:
+            return {}
+        
+        reactions_data = row[0]
+        
+        # If reactions data is None, return an empty dictionary
+        if reactions_data is None:
+            return {}
+        
+        return reactions_data
+    except psycopg2.Error as e:
+        print("Error fetching reactions:", e)
+        return {}
+    finally:
+        cur.close()
+        conn.close()
+
 
 
 
