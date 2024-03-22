@@ -42,34 +42,41 @@ def handle_search_command(message):
 @bot.message_handler(commands=['rules'])
 def rules(message):    
     user_id = message.from_user.id
-    if not user_subscribed_channel(user_id):
+    if user_exists(user_id):
+
+        if not user_subscribed_channel(user_id):
             markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
             subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
             continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
             markup.add(subscribe_button, continue_button)
             bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
             return
+        else:
+            bot.send_message(message.chat.id, rules_of_bot , reply_markup=create_main_keyboard())
     else:
-        bot.send_message(message.chat.id, rules_of_bot , reply_markup=create_main_keyboard())
+        bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
 
 @bot.message_handler(commands=['help'])
 def help(message):    
     user_id = message.from_user.id
-    if not user_subscribed_channel(user_id):
+    if user_exists(user_id):
+        if not user_subscribed_channel(user_id):
             markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
             subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
             continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
             markup.add(subscribe_button, continue_button)
             bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
             return
+        else:
+            bot.send_message(message.chat.id, help_of_bot , reply_markup=create_main_keyboard())
     else:
-        bot.send_message(message.chat.id, help_of_bot , reply_markup=create_main_keyboard())
+        bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
 
 
 def create_gender_keyboard():
     keyboard = InlineKeyboardMarkup()
-    male_button = InlineKeyboardButton('Мужской', callback_data='gender_male_create')
-    female_button = InlineKeyboardButton('Женский', callback_data='gender_female_create')
+    male_button = InlineKeyboardButton('👨 Мужской', callback_data='gender_male_create')
+    female_button = InlineKeyboardButton('👩 Женский', callback_data='gender_female_create')
     # Add other buttons or customization for creating a new gender
     keyboard.add(male_button, female_button)
     return keyboard
@@ -89,7 +96,7 @@ def handle_gender_selection(call):
 def create_interests_keyboard():
     keyboard = types.InlineKeyboardMarkup()
     chat_button = types.InlineKeyboardButton('Общение', callback_data='interest_chat')
-    intimate_button = types.InlineKeyboardButton('Интим 18+', callback_data='interest_intimate')
+    intimate_button = types.InlineKeyboardButton('Другое', callback_data='interest_other')
     keyboard.add(chat_button, intimate_button)
     return keyboard
 
@@ -109,24 +116,28 @@ def handle_age(message):
     age = int(message.text)
 
     if not user_subscribed_channel(user_id):
-            markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
-            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-            markup.add(subscribe_button, continue_button)
-            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
-            return
-
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
+        continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
+        markup.add(subscribe_button, continue_button)
+        bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+        return
     else:
-        if user_exists(user_id):
-            bot.send_message(message.chat.id, '❌ Неверное сообщение. Пожалуйста, следуйте процедуре регистрации или используйте действительные команды.',reply_markup=create_main_keyboard())
+        if not user_exists(user_id):
+            bot.send_message(message.chat.id, '❌ Неверное сообщение. Пожалуйста, следуйте процедуре регистрации или используйте действительные команды.')
             return
-    
-    markup = create_main_keyboard()
-    save_user_age(user_id, age)
-    bot.send_message(message.chat.id, '✅ Регистрация успешно завершена. Профиль создан.', reply_markup=markup)
+        
+        if age < 18 :
+            bot.send_message(message.chat.id, '❌ Извините, но данный бот предназначен только для лиц старше 18 лет.')
+            return
+        else:
+            markup = create_main_keyboard()
+            save_user_age(user_id, age)
+            bot.send_message(message.chat.id, '✅ Регистрация успешно завершена. Профиль создан.', reply_markup=markup)
 
+        
 
-
+        
 def create_main_keyboard():
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     profile_button = types.KeyboardButton('👤 Профиль')
@@ -172,7 +183,7 @@ def handle_profile(message):
 
             bot.send_message(message.chat.id, profile_text, reply_markup=create_profile_keyboard())
         else:
-            bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию.')
+            bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
 
 
 @bot.message_handler(commands=['profile'])
@@ -181,7 +192,7 @@ def profile(message):
 
 def create_profile_keyboard():
     keyboard = types.InlineKeyboardMarkup()
-    change_age_button = types.InlineKeyboardButton('Изменить возраст', callback_data='change_age')
+    change_age_button = types.InlineKeyboardButton('✏️ Изменить возраст', callback_data='change_age')
     keyboard.add(change_age_button)
     return keyboard
 
@@ -189,9 +200,13 @@ def create_profile_keyboard():
 def handle_change_profile(call):
     user_id = call.from_user.id
     action = call.data.split('_')[1]
-    if action == 'age':
-        bot.send_message(call.message.chat.id, 'Напиши новый возраст:')
-        bot.register_next_step_handler(call.message, process_new_age)
+    if user_exists(user_id):
+
+        if action == 'age':
+            bot.send_message(call.message.chat.id, 'Напиши новый возраст:')
+            bot.register_next_step_handler(call.message, process_new_age)
+    else:
+        bot.send_message(call.message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
 
 
 def process_new_age(message):
@@ -220,38 +235,42 @@ def stop(message):
     item1 = types.KeyboardButton('👤 Профиль')
     item2 = types.KeyboardButton('Найти собеседника 🔎')
     markup.add(item1, item2)
+    if user_exists(user_id):
 
-    if not user_subscribed_channel(user_id):
-        markup = types.InlineKeyboardMarkup(row_width=1)  
-        subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-        continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-        markup.add(subscribe_button, continue_button)
-        bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
-        return
-    else:
-        if chat_info:
-            if left_user_id is None:
-                # Store the user ID of the person who initiated the stop command
-                left_user_id = user_id  
-                bot.send_message(user_id, '✋ Подождите, пока ваш собеседник завершит чат.')
-            else:
-                # Both users are present, initiate the reaction process
-                delete_chat(chat_info[0]) 
-                bot.send_message(chat_info[1], '❌ Собеседник покинул чат', reply_markup=markup)
-                bot.send_message(user_id, '❌ Вы вышли из чата', reply_markup=markup)
-                # Ask for reaction
-                reaction_markup = types.InlineKeyboardMarkup(row_width=3)
-                item1 = types.InlineKeyboardButton('👍', callback_data='reaction_👍')
-                item2 = types.InlineKeyboardButton('👎', callback_data='reaction_👎')
-                item3 = types.InlineKeyboardButton('♥️', callback_data='reaction_♥️')
-                item4 = types.InlineKeyboardButton('🔥', callback_data='reaction_🔥')
-                item5 = types.InlineKeyboardButton('👌', callback_data='reaction_👌')
-                item6 = types.InlineKeyboardButton('🚫', callback_data='reaction_🚫')
-                reaction_markup.add(item1, item2, item3, item4, item5, item6)
 
-                bot.send_message(chat_info[1], 'Пожалуйста, реагируйте на действия собеседника смайлами ✨:', reply_markup=reaction_markup)
+        if not user_subscribed_channel(user_id):
+            markup = types.InlineKeyboardMarkup(row_width=1)  
+            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
+            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
+            markup.add(subscribe_button, continue_button)
+            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+            return
         else:
-            bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup)
+            if chat_info:
+                if left_user_id is None:
+                    # Store the user ID of the person who initiated the stop command
+                    left_user_id = user_id  
+                    bot.send_message(user_id, '✋ Подождите, пока ваш собеседник завершит чат.')
+                else:
+                    # Both users are present, initiate the reaction process
+                    delete_chat(chat_info[0]) 
+                    bot.send_message(chat_info[1], '❌ Собеседник покинул чат', reply_markup=markup)
+                    bot.send_message(user_id, '❌ Вы вышли из чата', reply_markup=markup)
+                    # Ask for reaction
+                    reaction_markup = types.InlineKeyboardMarkup(row_width=3)
+                    item1 = types.InlineKeyboardButton('👍', callback_data='reaction_👍')
+                    item2 = types.InlineKeyboardButton('👎', callback_data='reaction_👎')
+                    item3 = types.InlineKeyboardButton('♥️', callback_data='reaction_♥️')
+                    item4 = types.InlineKeyboardButton('🔥', callback_data='reaction_🔥')
+                    item5 = types.InlineKeyboardButton('👌', callback_data='reaction_👌')
+                    item6 = types.InlineKeyboardButton('🚫', callback_data='reaction_🚫')
+                    reaction_markup.add(item1, item2, item3, item4, item5, item6)
+
+                    bot.send_message(chat_info[1], '🖋️Пожалуйста, реагируйте на действия собеседника смайлами ✨:', reply_markup=reaction_markup)
+            else:
+                bot.send_message(user_id, '❌ Вы не начали чат', reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
 
 
 # Define a dictionary to keep track of reactions that have been saved during the current session
@@ -271,14 +290,14 @@ def handle_reaction(call):
     
     if left_user_id in saved_reactions:
         # If the reaction has already been saved for this user, send a message indicating so
-        bot.answer_callback_query(call.id, "You have already saved a reaction")
+        bot.answer_callback_query(call.id, "✅Вы уже сохранили реакцию")
     else:
         # Save the reaction into the database associated with the user who left
         save_reaction(left_user_id, reaction)
         saved_reactions[left_user_id] = reaction  # Mark the reaction as saved for this user
         
         # Send a message confirming the reaction and sending the menu
-        bot.send_message(call.message.chat.id, "Your reaction has been saved to your partner's database.")
+        bot.send_message(call.message.chat.id, "✅Ваша реакция сохранена.")
         create_main_keyboard()
 
 @bot.message_handler(content_types=['text'])
@@ -308,44 +327,49 @@ searching_users = []
 @bot.message_handler(func=lambda message: message.text == 'Найти собеседника 🔎')
 def handle_find_partner(message):
     user_id = message.from_user.id
-    if not user_subscribed_channel(user_id):
-            markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
-            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-            markup.add(subscribe_button, continue_button)
-            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
-            return
-    else:
-        global searching_users
-        
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        item1 = types.KeyboardButton('❌ Остановить поиск')
-        markup.add(item1)
+    if user_exists(user_id):
 
-        searching_users.append(message.from_user.id)
-
-        def send_waiting_message():
-            if len(searching_users) == 1:
-                bot.send_message(message.chat.id, 'Ожидаем собеседника...', reply_markup=markup)
-
-        if len(searching_users) >= 2:
-            chat_two = searching_users.pop(0)
-            chat_one = searching_users.pop(0)
-
-            if create_chat(chat_one, chat_two):
-                mess = 'Собеседник найден. Чтобы остановиться, напишите /stop'
-                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-                item1 = types.KeyboardButton('/stop')
-                markup.add(item1)
-                bot.send_message(chat_one, mess, reply_markup=markup)
-                bot.send_message(chat_two, mess, reply_markup=markup)
-            else:
-                bot.send_message(chat_one, 'Произошла ошибка при создании чата. Попробуйте еще раз.')
-                bot.send_message(chat_two, 'Произошла ошибка при создании чата. Попробуйте еще раз.')
-                searching_users.append(chat_one)
-                searching_users.append(chat_two)
+        if not user_subscribed_channel(user_id):
+                markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
+                subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
+                continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
+                markup.add(subscribe_button, continue_button)
+                bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+                return
         else:
-            send_waiting_message() 
+            global searching_users
+            
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            item1 = types.KeyboardButton('❌ Остановить поиск')
+            markup.add(item1)
+
+            searching_users.append(message.from_user.id)
+
+            def send_waiting_message():
+                if len(searching_users) == 1:
+                    bot.send_message(message.chat.id, 'Ожидаем собеседника...', reply_markup=markup)
+
+            if len(searching_users) >= 2:
+                chat_two = searching_users.pop(0)
+                chat_one = searching_users.pop(0)
+
+                if create_chat(chat_one, chat_two):
+                    mess = 'Собеседник найден. Чтобы остановиться, напишите /stop'
+                    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                    item1 = types.KeyboardButton('/stop')
+                    markup.add(item1)
+                    bot.send_message(chat_one, mess, reply_markup=markup)
+                    bot.send_message(chat_two, mess, reply_markup=markup)
+                else:
+                    bot.send_message(chat_one, 'Произошла ошибка при создании чата. Попробуйте еще раз.')
+                    bot.send_message(chat_two, 'Произошла ошибка при создании чата. Попробуйте еще раз.')
+                    searching_users.append(chat_one)
+                    searching_users.append(chat_two)
+            else:
+                send_waiting_message()
+    else:
+        bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
+
 
 def handle_stop_search(message):
     global searching_users
