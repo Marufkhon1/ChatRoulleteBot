@@ -80,10 +80,7 @@ def get_active_chat(chat_id):
             return False
 
 
-
-   
-            
-def save_user_gender(user_id, gender='Скрытый'):
+def save_user_gender(user_id, gender):
     with psycopg2.connect(**DATABASE) as conn:
         with conn.cursor() as cursor:
             cursor.execute(sql.SQL("SELECT EXISTS(SELECT 1 FROM users WHERE user_id = %s)"), (user_id,))
@@ -93,11 +90,12 @@ def save_user_gender(user_id, gender='Скрытый'):
                 cursor.execute(sql.SQL("UPDATE users SET gender = %s WHERE user_id = %s"), (gender, user_id))
             else:
                 cursor.execute(sql.SQL("INSERT INTO users (user_id, gender) VALUES (%s, %s)"), (user_id, gender))
+    
 
     logging.info(f"User {user_id} updated gender to {gender}")
 
 
-def save_user_interest(user_id, interest="other"):
+def save_user_interest(user_id, interest):
     conn = psycopg2.connect(**DATABASE)
     cursor = conn.cursor()
     cursor.execute("UPDATE users SET interest = %s WHERE user_id = %s", (interest, user_id))
@@ -107,9 +105,7 @@ def save_user_interest(user_id, interest="other"):
     logging.info(f"User {user_id} updated interest to {interest}")
 
 
-def save_user_age(user_id, age=None):
-    if age is None:
-        age = "Скрытый "
+def save_user_age(user_id, age):
     with psycopg2.connect(**DATABASE) as conn:
         with conn.cursor() as cursor:
             cursor.execute("UPDATE users SET age = %s WHERE user_id = %s", (age, user_id))
@@ -124,9 +120,9 @@ def get_user_profile(user_id):
     conn.close()
     
     if profile_data:
-        gender = 'Скрытый' if profile_data[1] is None else ('🙎‍♂Парень' if profile_data[1] == 'male' else '🙍‍♀Девушка')
-        age = profile_data[2] if profile_data[2] is not None else 'Возраст не указан'
-        interest = 'Общение' if profile_data[3] == 'chat' else 'Другое'
+        gender = profile_data[1] if profile_data[1] is not None else None
+        age = profile_data[2] if profile_data[2] is not None else None
+        interest = profile_data[3] if profile_data[3] is not None else None
         
         profile = {
             'gender': gender,
@@ -145,6 +141,40 @@ def update_user_age(user_id, new_age):
     cursor.execute("UPDATE users SET age = %s WHERE user_id = %s", (new_age, user_id))
     conn.commit()
     conn.close()
+
+def get_user_age(user_id):
+    conn = psycopg2.connect(**DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT age FROM users WHERE user_id = %s", (user_id,))
+    age = cursor.fetchone()
+    conn.close()
+    if age:
+        return age[0]  # Return the age value
+    else:
+        return None
+
+def get_user_gender(user_id):
+    conn = psycopg2.connect(**DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('SELECT gender FROM users WHERE user_id = %s',(user_id,))
+    gender = cursor.fetchone()
+    conn.close()
+    if gender:
+        return gender[0]
+    else:
+        return None
+    
+def get_user_interest(user_id):
+    conn = psycopg2.connect(**DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('SELECT interest FROM users WHERE user_id = %s',(user_id,))
+    interest= cursor.fetchone()
+    conn.close()
+    if interest:
+        return interest[0]
+    else:
+        return None
+
 
 def save_reaction(partner_user_id, reaction):
     conn = psycopg2.connect(**DATABASE)
