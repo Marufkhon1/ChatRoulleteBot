@@ -86,9 +86,12 @@ def create_gender_keyboard():
 def handle_gender_selection(call):
     user_id = call.from_user.id
     gender = call.data.split('_')[1]
-
-    save_user_gender(user_id, gender)
-    bot.send_message(call.message.chat.id, '📝 Регистрация\n👣 Шаг 2 из 3\n\nВыбери ниже, что тебе интересно?', reply_markup=create_interests_keyboard())
+    if not user_exists(user_id):
+        save_user_gender(user_id, gender)
+        bot.delete_message(call.message.chat.id, call.message.message_id)  # Delete the message after button press
+        bot.send_message(call.message.chat.id, '📝 Регистрация\n👣 Шаг 2 из 3\n\nВыбери ниже, что тебе интересно?', reply_markup=create_interests_keyboard())
+    else:
+        bot.send_message(call.message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
     
 
 
@@ -106,12 +109,12 @@ def handle_interest_selection(call):
     user_id = call.from_user.id
     interest = call.data.split('_')[1]
     # Save interest to the database
-    if user_exists and get_user_gender(user_id) is not None:
+    if user_exists and get_user_gender(user_id) is not None and get_user_interest(user_id) is None:
         save_user_interest(user_id, interest)
+        bot.delete_message(call.message.chat.id, call.message.message_id)  # Delete the message after button press
         bot.send_message(call.message.chat.id, '📝 Регистрация\n👣 Шаг 3 из 3\n\nНапиши, сколько тебе лет? (от 10 до 99)')
     else:
-        bot.send_message(call.message.chat.id,'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
-
+        bot.send_message(call.message.chat.id, '❌ Неверное сообщение. Пожалуйста, следуйте процедуре регистрации или используйте действительные команды.',reply_markup=create_main_keyboard())
 
 
 @bot.message_handler(func=lambda message: message.text.isdigit())
@@ -123,6 +126,7 @@ def handle_age(message):
         if get_user_age(user_id) is  None:
             markup = create_main_keyboard()
             save_user_age(user_id, age)
+            bot.delete_message(message.chat.id, message.message_id)
             bot.send_message(message.chat.id, '✅ Регистрация успешно завершена. Профиль создан.', reply_markup=markup)
         else:
             bot.send_message(message.chat.id, '❌ Неверное сообщение. Пожалуйста, следуйте процедуре регистрации или используйте действительные команды.',reply_markup=create_main_keyboard())
@@ -279,7 +283,7 @@ def handle_reaction(call):
     
     if left_user_id is None:
         # Handle the case where left_user_id is not set (unexpected behavior)
-        bot.answer_callback_query(call.id, "Error: left_user_id not set")
+        bot.answer_callback_query(call.id, "❌ Вы не начали чат")
         return
     
     if left_user_id in saved_reactions:

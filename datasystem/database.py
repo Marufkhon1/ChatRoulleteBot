@@ -259,6 +259,17 @@ def get_user_gender(user_id):
         return gender[0]
     else:
         return None
+    
+def get_user_interest(user_id):
+    conn = psycopg2.connect(**DATABASE)
+    cur = conn.cursor()
+    cur.execute('SELECT interest FROM users WHERE user_id=%s',(user_id,))
+    interest = cur.fetchone()
+    if interest:
+        return interest[0]
+    else:
+        return None
+
 
 
 
