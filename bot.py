@@ -114,26 +114,19 @@ def handle_interest_selection(call):
 def handle_age(message):
     user_id = message.from_user.id
     age = int(message.text)
-
-    if not user_subscribed_channel(user_id):
-        markup = types.InlineKeyboardMarkup(row_width=1)
-        subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-        continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-        markup.add(subscribe_button, continue_button)
-        bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+    if age < 0:
+        bot.send_message(message.chat.id, '❌ Неверное сообщение. Возраст не может быть отрицательным числом.')
         return
-    else:
-        if not user_exists(user_id):
-            bot.send_message(message.chat.id, '❌ Неверное сообщение. Пожалуйста, следуйте процедуре регистрации или используйте действительные команды.')
-            return
-        
-        if age < 18 :
-            bot.send_message(message.chat.id, '❌ Извините, но данный бот предназначен только для лиц старше 18 лет.')
-            return
-        else:
+
+    if user_exists(user_id):
+        if get_user_age(user_id) is None:
             markup = create_main_keyboard()
             save_user_age(user_id, age)
             bot.send_message(message.chat.id, '✅ Регистрация успешно завершена. Профиль создан.', reply_markup=markup)
+        else:
+            bot.send_message(message.chat.id, '❌ Ваш возраст уже зарегистрирован.')
+    else:
+        bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию. /start')
 
         
 
@@ -154,37 +147,41 @@ def show_menu(message):
 @bot.message_handler(func=lambda message: message.text == '👤 Профиль')
 def handle_profile(message):
     user_id = message.from_user.id
-    if not user_subscribed_channel(user_id):
-        markup = types.InlineKeyboardMarkup(row_width=1)
-        subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-        continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-        markup.add(subscribe_button, continue_button)
-        bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
-        return
-    else:
-        profile_data = get_user_profile(user_id)
-        if profile_data:
-            # Fetch reactions data
-            reactions_data = get_user_reactions(user_id)
-            
-            # Create profile text
-            profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}"
-            
-            # Add reactions data to profile text
-            if reactions_data:
-                profile_text += "\n\n👍: {}  👎: {}  ♥️: {}  🔥: {}  👌: {}  🚫: {}".format(
-                    reactions_data.get('👍', 0),
-                    reactions_data.get('👎', 0),
-                    reactions_data.get('♥️', 0),
-                    reactions_data.get('🔥', 0),
-                    reactions_data.get('👌', 0),
-                    reactions_data.get('🚫', 0)
-                )
-
-            bot.send_message(message.chat.id, profile_text, reply_markup=create_profile_keyboard())
+    if user_exists(user_id):
+        if not user_subscribed_channel(user_id):
+            markup = types.InlineKeyboardMarkup(row_width=1)
+            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
+            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
+            markup.add(subscribe_button, continue_button)
+            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+            return
         else:
-            bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
+            profile_data = get_user_profile(user_id)
+            if profile_data:
+                # Fetch reactions data
+                reactions_data = get_user_reactions(user_id)
+                
+                # Create profile text
+                profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}"
+                
+                # Add reactions data to profile text
+                if reactions_data:
+                    profile_text += "\n\n👍: {}  👎: {}  ♥️: {}  🔥: {}  👌: {}  🚫: {}".format(
+                        reactions_data.get('👍', 0),
+                        reactions_data.get('👎', 0),
+                        reactions_data.get('♥️', 0),
+                        reactions_data.get('🔥', 0),
+                        reactions_data.get('👌', 0),
+                        reactions_data.get('🚫', 0)
+                    )
 
+                bot.send_message(message.chat.id, profile_text, reply_markup=create_profile_keyboard())
+            else:
+                bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
+    else :
+        bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
+        
+       
 
 @bot.message_handler(commands=['profile'])
 def profile(message):
@@ -303,21 +300,25 @@ def handle_reaction(call):
 @bot.message_handler(content_types=['text'])
 def bot_message(message):
     user_id = message.from_user.id
-    if not user_subscribed_channel(user_id):
-            markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
-            subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
-            continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
-            markup.add(subscribe_button, continue_button)
-            bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
-            return
+    if user_exists(user_id):
+        if not user_subscribed_channel(user_id):
+                markup = types.InlineKeyboardMarkup(row_width=1)  # Set row_width to 1 for a vertical layout
+                subscribe_button = types.InlineKeyboardButton("Подпишитесь на наш канал", url="https://t.me/chatroulletebotuz")
+                continue_button = types.InlineKeyboardButton("Продолжить", callback_data="continue_registration")
+                markup.add(subscribe_button, continue_button)
+                bot.send_message(message.chat.id, '😔 Вы еще не подписаны на наши каналы! Подпишитесь и нажмите кнопку "Продолжить".', reply_markup=markup)
+                return
+        else:
+            if message.chat.type == 'private':
+                if message.text == 'Найти собеседника 🔎':
+                    handle_find_partner(message)
+                elif message.text == '❌ Остановить поиск':
+                    handle_stop_search(message)
+                else:
+                    handle_chat_message(message)
     else:
-        if message.chat.type == 'private':
-            if message.text == 'Найти собеседника 🔎':
-                handle_find_partner(message)
-            elif message.text == '❌ Остановить поиск':
-                handle_stop_search(message)
-            else:
-                handle_chat_message(message)
+        bot.send_message(message.chat.id, 'Профиль не найден. Пожалуйста, пройдите регистрацию./start')
+
 
 
 
