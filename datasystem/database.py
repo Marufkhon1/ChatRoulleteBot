@@ -210,6 +210,27 @@ def get_user_reactions(user_id):
         cur.close()
         conn.close()
 
+def get_user_age(user_id):
+    conn = psycopg2.connect(**DATABASE)
+    cur = conn.cursor()
+    cur.execute('SELECT age FROM users WHERE user_id=%s',(user_id,))
+    age = cur.fetchone()
+    if age:
+        return age[0]
+    else:
+        return None
+    
+def get_user_gender(user_id):
+    conn = psycopg2.connect(**DATABASE)
+    cur = conn.cursor()
+    cur.execute('SELECT gender FROM users WHERE user_id=%s',(user_id,))
+    gender = cur.fetchone()
+    if gender:
+        return gender[0]
+    else:
+        return None
+
+
 
 
 
