@@ -1,2 +1,4 @@
 __pycache__/
 .env
+schema_dump.sql
+config.py

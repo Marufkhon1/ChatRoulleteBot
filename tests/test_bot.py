@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import MagicMock, patch,Mock
 from unittest.mock import call
 from telebot import types
-from bot import (
+from main import (
     start,
     create_gender_keyboard,
     handle_age,
@@ -19,7 +19,7 @@ from bot import (
     stop,
     bot_message,
     handle_stop_search,
-    handle_user_profile,
+    
     handle_chat_message,
     handle_find_partner
 )
@@ -285,20 +285,6 @@ class TestBot(unittest.TestCase):
 
         mock_update_user_age.assert_called_once_with(user_id, 25)
         mock_send_message.assert_called_once_with(message.chat.id, 'Возраст успешно изменен.')
-
-    @mock.patch('bot.get_user_profile', return_value={'gender': 'Male', 'age': 25, 'interest': 'Chat'})
-    @mock.patch('bot.add_user')
-    def test_handle_user_profile_exists(self, mock_add_user, mock_get_user_profile):
-        user_id = 123  # Replace with appropriate values
-        handle_user_profile(user_id)
-        mock_add_user.assert_called_with(user_id, 'Male', 25, 'Chat')
-
-    @mock.patch('bot.get_user_profile', return_value=None)
-    @mock.patch('bot.add_user')
-    def test_handle_user_profile_not_exists(self, mock_add_user, mock_get_user_profile):
-        user_id = 123  # Replace with appropriate values
-        handle_user_profile(user_id)
-        mock_add_user.assert_called_with(user_id, '🙎‍♂Парень', 25, 'Общение')
 
     @mock.patch('bot.bot.send_message')
     def test_handle_stop_search(self, mock_send_message):

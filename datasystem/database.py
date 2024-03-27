@@ -1,180 +1,190 @@
 import psycopg2
-from psycopg2 import sql
-import logging
 import json
-from bot import logging
+import logging
+import dj_database_url
+from config import DATABASE
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 
-DATABASE = {
-    'host': 'localhost',
-    'port': '5432',
-    'database': 'postgres',
-    'user': 'postgres',
-    'password': '12345'
-}
 
-
-def add_user(user_id, gender, age, interest):
+def connect_to_database():
     try:
         conn = psycopg2.connect(**DATABASE)
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO users (user_id, gender, age, interest) VALUES (%s, %s, %s, %s)",
-            (user_id, gender, age, interest)
-        )
-        conn.commit()
-        conn.close()
-        logging.info(f"User {user_id} added successfully")
+        return conn
     except psycopg2.Error as e:
-        logging.error(f"Error adding user {user_id}: {str(e)}")
-
-
-
-def user_exists(user_id):
-    with psycopg2.connect(**DATABASE) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql.SQL("SELECT EXISTS(SELECT 1 FROM users WHERE user_id = %s)"), (user_id,))
-            result = cursor.fetchone()[0]
-    return result
-
-def get_chat():
-    with psycopg2.connect(**DATABASE) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT user_id FROM users ORDER BY RANDOM() LIMIT 1")
-            chat = cursor.fetchone()
-            return chat[0] if chat else None
-
-
-def delete_chat(id_chat):
-    with psycopg2.connect(**DATABASE) as conn:
-        with conn.cursor() as cursor:
-            return cursor.execute("DELETE FROM chats WHERE id = %s", (id_chat,))
-   
-
-def create_chat(chat_one, chat_two):
-    with psycopg2.connect(**DATABASE) as conn:
-        with conn.cursor() as cursor:
-            if chat_one != chat_two:  # Check if chat_one is different from chat_two
-                cursor.execute("INSERT INTO chats (chat_one, chat_two) VALUES (%s, %s)", (chat_one, chat_two))
-                return True
-            else:
-                return False
- 
-
-def get_active_chat(chat_id):
-    with psycopg2.connect(**DATABASE) as conn:
-        with conn.cursor() as cursor:
-            # Check if chat_one matches the provided chat_id
-            cursor.execute("SELECT * FROM chats WHERE chat_one = %s::text", (str(chat_id),))
-            row = cursor.fetchone()  # Fetch only one row if found
-            if row:
-                return [row[0], row[2]]  # Return chat_info
-
-            # Check if chat_two matches the provided chat_id
-            cursor.execute("SELECT * FROM chats WHERE chat_two = %s::text", (str(chat_id),))
-            row = cursor.fetchone()  # Fetch only one row if found
-            if row:
-                return [row[0], row[1]]  # Return chat_info
-
-            # If no chat is found, return False
-            return False
-
-
-def save_user_gender(user_id, gender):
-    with psycopg2.connect(**DATABASE) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql.SQL("SELECT EXISTS(SELECT 1 FROM users WHERE user_id = %s)"), (user_id,))
-            user_exists = cursor.fetchone()[0]
-
-            if user_exists:
-                cursor.execute(sql.SQL("UPDATE users SET gender = %s WHERE user_id = %s"), (gender, user_id))
-            else:
-                cursor.execute(sql.SQL("INSERT INTO users (user_id, gender) VALUES (%s, %s)"), (user_id, gender))
-    
-
-    logging.info(f"User {user_id} updated gender to {gender}")
-
-
-def save_user_interest(user_id, interest):
-    conn = psycopg2.connect(**DATABASE)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET interest = %s WHERE user_id = %s", (interest, user_id))
-    conn.commit()
-    conn.close()
-
-    logging.info(f"User {user_id} updated interest to {interest}")
-
-
-def save_user_age(user_id, age):
-    with psycopg2.connect(**DATABASE) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("UPDATE users SET age = %s WHERE user_id = %s", (age, user_id))
-    logging.info(f"User {user_id} updated age to {age}")
-
-
-def get_user_profile(user_id):
-    conn = psycopg2.connect(**DATABASE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
-    profile_data = cursor.fetchone()
-    conn.close()
-    
-    if profile_data:
-        gender = profile_data[1] if profile_data[1] is not None else None
-        age = profile_data[2] if profile_data[2] is not None else None
-        interest = profile_data[3] if profile_data[3] is not None else None
-        
-        profile = {
-            'gender': gender,
-            'age': age,
-            'interest': interest
-        }
-        return profile
-    else:
+        logging.error(f"Error connecting to database: {e}")
         return None
 
+def add_user(user_id, gender, age, interest):
+    conn = connect_to_database()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO users (user_id, gender, age, interest) VALUES (%s, %s, %s, %s)",
+                (user_id, gender, age, interest)
+            )
+            conn.commit()
+            logging.info(f"User {user_id} added successfully")
+        except psycopg2.Error as e:
+            logging.error(f"Error adding user {user_id}: {e}")
+        finally:
+            conn.close()
+
+def user_exists(user_id):
+    conn = connect_to_database()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT EXISTS(SELECT 1 FROM users WHERE user_id = %s)",
+                    (user_id,)
+                )
+                result = cursor.fetchone()[0]
+            return result
+        except psycopg2.Error as e:
+            logging.error(f"Error checking if user exists: {e}")
+        finally:
+            conn.close()
+    return None 
+
+            
+def save_user_gender(user_id, gender):
+    conn = connect_to_database()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT EXISTS(SELECT 1 FROM users WHERE user_id = %s)", (user_id,))
+                user_exists = cursor.fetchone()[0]
+
+                if user_exists:
+                    cursor.execute("UPDATE users SET gender = %s WHERE user_id = %s", (gender, user_id))
+                else:
+                    cursor.execute("INSERT INTO users (user_id, gender) VALUES (%s, %s)", (user_id, gender))
+            conn.commit()
+            logging.info(f"User {user_id} updated gender to {gender}")
+        except psycopg2.Error as e:
+            logging.error(f"Error saving user gender for user {user_id}: {e}")
+        finally:
+            conn.close()
+
+def save_user_interest(user_id, interest):
+    conn = connect_to_database()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("UPDATE users SET interest = %s WHERE user_id = %s", (interest, user_id))
+            conn.commit()
+            logging.info(f"User {user_id} updated interest to {interest}")
+        except psycopg2.Error as e:
+            logging.error(f"Error saving user interest for user {user_id}: {e}")
+        finally:
+            conn.close()
+
+def save_user_age(user_id, age):
+    conn = connect_to_database()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("UPDATE users SET age = %s WHERE user_id = %s", (age, user_id))
+            conn.commit()
+            logging.info(f"User {user_id} updated age to {age}")
+        except psycopg2.Error as e:
+            logging.error(f"Error saving user age for user {user_id}: {e}")
+        finally:
+            conn.close()
+
+def get_user_profile(user_id):
+    conn = connect_to_database()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
+                profile_data = cursor.fetchone()
+                if profile_data:
+                    gender = profile_data[1] if profile_data[1] is not None else None
+                    age = profile_data[2] if profile_data[2] is not None else None
+                    interest = profile_data[3] if profile_data[3] is not None else None
+
+                    if gender == 'male':
+                        gender = 'Мужской'
+                    elif gender == 'female':
+                        gender = 'Женский'
+                    elif interest == 'chat':
+                        interest = 'Общение'
+                    elif interest == 'other':
+                        interest = 'Другое'
+                    
+                    
+                    profile = {
+                        'gender': gender,
+                        'age': age,
+                        'interest': interest
+                    }
+
+                
+                    return profile
+        except psycopg2.Error as e:
+            logging.error(f"Error fetching user profile for user {user_id}: {e}")
+        finally:
+            conn.close()
+    return None
 
     
 def update_user_age(user_id, new_age):
-    conn = psycopg2.connect(**DATABASE)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET age = %s WHERE user_id = %s", (new_age, user_id))
-    conn.commit()
-    conn.close()
+    conn = connect_to_database()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("UPDATE users SET age = %s WHERE user_id = %s", (new_age, user_id))
+        conn.commit()
+    except psycopg2.Error as e:
+        print("Error updating user age:", e)
+    finally:
+        conn.close()
 
 def get_user_age(user_id):
-    conn = psycopg2.connect(**DATABASE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT age FROM users WHERE user_id = %s", (user_id,))
-    age = cursor.fetchone()
-    conn.close()
-    if age:
-        return age[0]  # Return the age value
-    else:
-        return None
+    conn = connect_to_database()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT age FROM users WHERE user_id = %s", (user_id,))
+            age = cursor.fetchone()
+            if age:
+                return age[0]
+    except psycopg2.Error as e:
+        print("Error fetching user age:", e)
+    finally:
+        conn.close()
+    return None
 
 def get_user_gender(user_id):
-    conn = psycopg2.connect(**DATABASE)
-    cursor = conn.cursor()
-    cursor.execute('SELECT gender FROM users WHERE user_id = %s',(user_id,))
-    gender = cursor.fetchone()
-    conn.close()
-    if gender:
-        return gender[0]
-    else:
-        return None
+    conn = connect_to_database()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT gender FROM users WHERE user_id = %s',(user_id,))
+            gender = cursor.fetchone()
+            if gender:
+                return gender[0]
+    except psycopg2.Error as e:
+        print("Error fetching user gender:", e)
+    finally:
+        conn.close()
+    return None
     
 def get_user_interest(user_id):
-    conn = psycopg2.connect(**DATABASE)
-    cursor = conn.cursor()
-    cursor.execute('SELECT interest FROM users WHERE user_id = %s',(user_id,))
-    interest= cursor.fetchone()
-    conn.close()
-    if interest:
-        return interest[0]
-    else:
-        return None
-
+    conn = connect_to_database()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT interest FROM users WHERE user_id = %s',(user_id,))
+            interest= cursor.fetchone()
+            if interest:
+                return interest[0]
+    except psycopg2.Error as e:
+        print("Error fetching user interest:", e)
+    finally:
+        conn.close()
+    return None
 
 def save_reaction(partner_user_id, reaction):
     conn = psycopg2.connect(**DATABASE)
@@ -215,63 +225,65 @@ def save_reaction(partner_user_id, reaction):
         conn.close()
 
 def get_user_reactions(user_id):
-    conn = psycopg2.connect(**DATABASE)
-    cur = conn.cursor()
+    conn = connect_to_database()
     try:
-        # Fetch reactions data for the user
-        cur.execute("SELECT reactions FROM users WHERE user_id = %s", (user_id,))
-        row = cur.fetchone()
-        
-        # If no row is found, return an empty dictionary
-        if row is None:
-            return {}
-        
-        reactions_data = row[0]
-        
-        # If reactions data is None, return an empty dictionary
-        if reactions_data is None:
-            return {}
-        
-        return reactions_data
+        with conn.cursor() as cur:
+            # Fetch reactions data for the user
+            cur.execute("SELECT reactions FROM users WHERE user_id = %s", (user_id,))
+            row = cur.fetchone()
+            
+            # If no row is found, return an empty dictionary
+            if row is None:
+                return {}
+            
+            reactions_data = row[0]
+            
+            # If reactions data is None, return an empty dictionary
+            if reactions_data is None:
+                return {}
+            
+            return reactions_data
     except psycopg2.Error as e:
         print("Error fetching reactions:", e)
         return {}
     finally:
-        cur.close()
         conn.close()
 
-def get_user_age(user_id):
-    conn = psycopg2.connect(**DATABASE)
-    cur = conn.cursor()
-    cur.execute('SELECT age FROM users WHERE user_id=%s',(user_id,))
-    age = cur.fetchone()
-    if age:
-        return age[0]
-    else:
-        return None
-    
-def get_user_gender(user_id):
-    conn = psycopg2.connect(**DATABASE)
-    cur = conn.cursor()
-    cur.execute('SELECT gender FROM users WHERE user_id=%s',(user_id,))
-    gender = cur.fetchone()
-    if gender:
-        return gender[0]
-    else:
-        return None
-    
-def get_user_interest(user_id):
-    conn = psycopg2.connect(**DATABASE)
-    cur = conn.cursor()
-    cur.execute('SELECT interest FROM users WHERE user_id=%s',(user_id,))
-    interest = cur.fetchone()
-    if interest:
-        return interest[0]
-    else:
-        return None
+def save_user_age(user_id, age):
+    conn = connect_to_database()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT EXISTS(SELECT 1 FROM users WHERE user_id = %s)", (user_id,))
+                user_exists = cursor.fetchone()[0]
+
+                if user_exists:
+                    cursor.execute("UPDATE users SET age = %s WHERE user_id = %s", (age, user_id))
+                else:
+                    cursor.execute("INSERT INTO users (user_id, age) VALUES (%s, %s)", (user_id, age))
+            conn.commit()
+            logging.info(f"User {user_id} updated age to {age}")
+        except psycopg2.Error as e:
+            logging.error(f"Error saving user age for user {user_id}: {e}")
+        finally:
+            conn.close()
 
 
+def save_user_interest(user_id, interest):
+    conn = connect_to_database()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT EXISTS(SELECT 1 FROM users WHERE user_id = %s)", (user_id,))
+                user_exists = cursor.fetchone()[0]
 
-
-
-
+                if user_exists:
+                    cursor.execute("UPDATE users SET interest = %s WHERE user_id = %s", (interest, user_id))
+                else:
+                    cursor.execute("INSERT INTO users (user_id, interest) VALUES (%s, %s)", (user_id, interest))
+            conn.commit()
+            logging.info(f"User {user_id} updated interest to {interest}")
+        except psycopg2.Error as e:
+            logging.error(f"Error saving user interest for user {user_id}: {e}")
+        finally:
+            conn.close()

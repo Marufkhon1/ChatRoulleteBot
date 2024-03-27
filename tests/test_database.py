@@ -7,10 +7,7 @@ from datasystem.database import * # Import your add_user function here
 mock_cursor = MagicMock()
 
 class TestDatabaseFunctions(unittest.TestCase):
-    def test_get_chat(self):
-        result = get_chat()
-        self.assertIsNotNone(result)
-        self.assertIsInstance(result, int)
+    
 
     @patch('datasystem.database.psycopg2.connect')
     def test_add_user(self, mock_connect):
@@ -39,39 +36,12 @@ class TestDatabaseFunctions(unittest.TestCase):
         # Assertions
         self.assertTrue(result)
 
-    def test_delete_chat(self):
-        # Assume there is an existing chat with id 1
-        id_chat = 1
-        delete_chat(id_chat)
-        self.assertFalse(self.chat_exists(id_chat))
-
-    def test_create_chat(self):
-        chat_one = 1
-        chat_two = 2
-        self.assertTrue(create_chat(chat_one, chat_two))
-
-        # Attempt to create a chat with the same chat_one and chat_two
-        self.assertFalse(create_chat(chat_one, chat_one))
-
     def chat_exists(self, id_chat):
         with psycopg2.connect(**DATABASE) as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT EXISTS(SELECT 1 FROM chats WHERE id = %s)", (id_chat,))
                 result = cursor.fetchone()[0]
         return result
-
-    @patch('datasystem.database.psycopg2.connect')
-    def test_get_active_chat(self, mock_connect):
-        mock_cursor = mock_connect.return_value.cursor.return_value
-
-        # Mock the execute method of the cursor
-        mock_cursor.fetchall.return_value = []  # Simulate no chat found
-
-        # Call the function
-        result = get_active_chat('user1')
-
-        # Assertions
-        self.assertFalse(result, "Expected False, indicating no chat found")
 
     def get_user_gender_from_database(self, user_id):
         with psycopg2.connect(**DATABASE) as conn:
