@@ -43,7 +43,7 @@ def start(message):
 
         bot.send_message(
             message.chat.id,
-            "📝 Регистрация\n👣 Шаг 1 из 3\n\nВыбери ниже, какого ты пола?",
+            "📝 Регистрация\n👣 Шаг 1 из 4\n\nВыбери ниже, какого ты пола?",
             reply_markup=markup,
         )
     else:
@@ -146,7 +146,7 @@ def handle_gender_selection(call):
         )  # Delete the message after button press
         bot.send_message(
             call.message.chat.id,
-            "📝 Регистрация\n👣 Шаг 2 из 3\n\nВыбери ниже, что тебе интересно?",
+            "📝 Регистрация\n👣 Шаг 2 из 4\n\nВыбери ниже, что тебе интересно?",
             reply_markup=create_interests_keyboard(),
         )
     else:
@@ -182,7 +182,7 @@ def handle_interest_selection(call):
         )  # Delete the message after button press
         bot.send_message(
             call.message.chat.id,
-            "📝 Регистрация\n👣 Шаг 3 из 3\n\nНапиши, сколько тебе лет? (от 10 до 99)",
+            "📝 Регистрация\n👣 Шаг 3 из 4\n\nНапиши, сколько тебе лет? (от 10 до 99)",
         )
     else:
         bot.send_message(
@@ -204,7 +204,7 @@ def handle_age(message):
             bot.delete_message(message.chat.id, message.message_id)
             bot.send_message(
                 message.chat.id,
-                "✅ Регистрация успешно завершена. Профиль создан.",
+                "📝 Регистрация\n👣 Шаг 4 из 4\n\nПожалуйста, отправьте ваше фото.",
                 reply_markup=markup,
             )
         else:
@@ -216,9 +216,33 @@ def handle_age(message):
     else:
         bot.send_message(
             message.chat.id,
-            "Профиль не найден. Пожалуйста, пройдите регистрацию./start",
+            "Профиль не найден. Пожалуйста, пройдите регистрацию.",
         )
 
+@bot.message_handler(content_types=["photo"], func=lambda message: user_exists(message.from_user.id))
+def handle_photo(message):
+    user_id = message.from_user.id
+    
+    if get_user_age(user_id) is not None and get_user_gender(user_id) is not None:
+        if message.photo:
+            photo_id = message.photo[-1].file_id
+            save_user_photo(user_id, photo_id)
+            markup = create_main_keyboard()
+            bot.send_message(
+                message.chat.id,
+                "✅ Фотография успешно сохранена. Регистрация завершена.",
+                reply_markup=markup,
+            )
+        else:
+            bot.send_message(
+                message.chat.id,
+                "❌ Пожалуйста, отправьте изображение в формате фотографии, а не документа (например, PDF). Попробуйте снова.",
+            )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "❌ Пожалуйста, сначала введите свой возраст.",
+        )
 
 def create_main_keyboard():
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -237,6 +261,8 @@ def show_menu(message):
 @bot.message_handler(func=lambda message: message.text == "👤 Профиль")
 def handle_profile(message):
     user_id = message.from_user.id
+    
+    # Check if the user is subscribed to the channel
     if not user_subscribed_channel(user_id):
         markup = types.InlineKeyboardMarkup(row_width=1)
         subscribe_button = types.InlineKeyboardButton(
@@ -255,35 +281,42 @@ def handle_profile(message):
     else:
         profile_data = get_user_profile(user_id)
         if profile_data:
-            # Fetch reactions data
-            reactions_data = get_user_reactions(user_id)
+            # Fetch profile image
+            profile_image = get_user_photo(user_id)
+            if profile_image:
+                # Create profile text
+                profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}"
 
-            # Create profile text
-            profile_text = f"👤 Профиль\n\n#️⃣ ID — {user_id}\n👫 Пол — {profile_data['gender']}\n🔞 Возраст — {profile_data['age']}\n🚪 Комната - {profile_data['interest']}"
+                # Add reactions data to profile text
+                reactions_data = get_user_reactions(user_id)
+                if reactions_data:
+                    profile_text += "\n\n👍 {}  👎 {}  ♥️ {}  🔥 {}  👌 {}  🚫 {}".format(
+                        reactions_data.get("👍", 0),
+                        reactions_data.get("👎", 0),
+                        reactions_data.get("♥️", 0),
+                        reactions_data.get("🔥", 0),
+                        reactions_data.get("👌", 0),
+                        reactions_data.get("🚫", 0),
+                    )
+                else:
+                    profile_text += "\n\n 👍 0 👎 0  ♥️  0 🔥 0 👌 0 🚫 0"
 
-            # Add reactions data to profile text
-            if reactions_data:
-                profile_text += "\n\n👍 {}  👎 {}  ♥️ {}  🔥 {}  👌 {}  🚫 {}".format(
-                    reactions_data.get("👍", 0),
-                    reactions_data.get("👎", 0),
-                    reactions_data.get("♥️", 0),
-                    reactions_data.get("🔥", 0),
-                    reactions_data.get("👌", 0),
-                    reactions_data.get("🚫", 0),
+                # Send profile information along with the photo
+                bot.send_photo(
+                    message.chat.id,
+                    profile_image,
+                    caption=profile_text,
+                    parse_mode="HTML",reply_markup=create_profile_keyboard()
                 )
             else:
-                profile_text += "\n\n 👍 0 👎 0  ♥️  0 🔥 0 👌 0 🚫 0"
-
-            bot.send_message(
-                message.chat.id, profile_text, reply_markup=create_profile_keyboard()
-            )
+                bot.send_message(
+                    message.chat.id, "Фотография профиля не найдена."
+                )
         else:
             bot.send_message(
                 message.chat.id,
                 "Профиль не найден. Пожалуйста, пройдите регистрацию./start",
             )
-
-
 @bot.message_handler(commands=["profile"])
 def profile(message):
     handle_profile(message)
@@ -294,25 +327,47 @@ def create_profile_keyboard():
     change_age_button = types.InlineKeyboardButton(
         "✏️ Изменить возраст", callback_data="change_age"
     )
-    keyboard.add(change_age_button)
+    change_image_button = types.InlineKeyboardButton(
+        "📷 Изменить фотографию", callback_data="change_image"
+    )
+    keyboard.add(change_age_button, change_image_button)
     return keyboard
-
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("change_"))
 def handle_change_profile(call):
     user_id = call.from_user.id
     action = call.data.split("_")[1]
     if user_exists(user_id):
-
         if action == "age":
             bot.send_message(call.message.chat.id, "Напиши новый возраст:")
             bot.register_next_step_handler(call.message, process_new_age)
+        elif action == "image":
+            bot.send_message(call.message.chat.id, "Отправь новую фотографию:")
+            bot.register_next_step_handler(call.message, process_new_image)
     else:
         bot.send_message(
             call.message.chat.id,
             "Профиль не найден. Пожалуйста, пройдите регистрацию./start",
         )
 
+def process_new_image(message):
+    user_id = message.from_user.id
+    # Check if the message contains a photo
+    if message.photo:
+        # Get the file ID of the last photo in the message
+        photo_id = message.photo[-1].file_id
+        # Save the new photo to the database
+        save_user_photo(user_id, photo_id)
+        bot.send_message(
+            message.chat.id,
+            "✅ Фотография успешно изменена.",
+            reply_markup=create_main_keyboard(),
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "❌ Пожалуйста, отправьте изображение в формате фотографии, а не документа (например, PDF). Попробуйте снова.",
+        )
 
 def process_new_age(message):
     user_id = message.from_user.id

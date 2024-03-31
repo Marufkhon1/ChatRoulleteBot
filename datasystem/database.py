@@ -6,14 +6,7 @@ import dj_database_url
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-DATABASE = {
-    "dbname": "dgnf1arp7q6a",
-    "user": "ueach8c2u26cg9",
-    "password": "p2744a7f94694fd4796173ed2836d762c3f643390921ef1140db4c9647bbae1b3",
-    "host": "ec2-54-160-201-5.compute-1.amazonaws.com",
-    "port": "5432",
-}
-
+from config import DATABASE
 
 def connect_to_database():
     try:
@@ -118,6 +111,23 @@ def save_user_age(user_id, age):
         finally:
             conn.close()
 
+def save_user_photo(user_id, photo_id):
+    conn = connect_to_database()
+    if conn:
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE users SET photo = %s WHERE user_id = %s", (photo_id, user_id)
+                )
+            conn.commit()
+            logging.info(f"User {user_id} updated photo to {photo_id}")
+        except psycopg2.Error as e:
+            logging.error(f"Error saving user photo for user {user_id}: {e}")
+        finally:
+            conn.close()
+    else:
+        logging.error("Failed to connect to the database.")
+
 
 def get_user_profile(user_id):
     conn = connect_to_database()
@@ -168,6 +178,7 @@ def update_user_age(user_id, new_age):
         conn.close()
 
 
+
 def get_user_age(user_id):
     conn = connect_to_database()
     try:
@@ -178,6 +189,20 @@ def get_user_age(user_id):
                 return age[0]
     except psycopg2.Error as e:
         print("Error fetching user age:", e)
+    finally:
+        conn.close()
+    return None
+
+def get_user_photo(user_id):
+    conn = connect_to_database()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT photo FROM users WHERE user_id = %s", (user_id,))
+            photo = cursor.fetchone()
+            if photo:
+                return photo[0]
+    except psycopg2.Error as e:
+        print("Error fetching user photo:", e)
     finally:
         conn.close()
     return None
