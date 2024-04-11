@@ -2,11 +2,12 @@ import psycopg2
 import json
 import logging
 import dj_database_url
+from config import DATABASE
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-from config import DATABASE
+
 
 def connect_to_database():
     try:
@@ -111,23 +112,36 @@ def save_user_age(user_id, age):
         finally:
             conn.close()
 
-def save_user_photo(user_id, photo_id):
+def get_user_photo(user_id):
+    conn = connect_to_database()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT photo FROM users WHERE user_id = %s", (user_id,))
+            photo_url = cursor.fetchone()
+            if photo_url:
+                return photo_url[0]
+    except psycopg2.Error as e:
+        logging.error("Error fetching user photo:", e)
+    finally:
+        conn.close()
+    
+    return None
+def save_user_photo(user_id, photo_url):
     conn = connect_to_database()
     if conn:
         try:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    "UPDATE users SET photo = %s WHERE user_id = %s", (photo_id, user_id)
+                    "UPDATE users SET photo = %s WHERE user_id = %s", (photo_url, user_id)
                 )
             conn.commit()
-            logging.info(f"User {user_id} updated photo to {photo_id}")
+            logging.info(f"User {user_id} updated photo to {photo_url}")
         except psycopg2.Error as e:
             logging.error(f"Error saving user photo for user {user_id}: {e}")
         finally:
             conn.close()
     else:
         logging.error("Failed to connect to the database.")
-
 
 def get_user_profile(user_id):
     conn = connect_to_database()
@@ -189,20 +203,6 @@ def get_user_age(user_id):
                 return age[0]
     except psycopg2.Error as e:
         print("Error fetching user age:", e)
-    finally:
-        conn.close()
-    return None
-
-def get_user_photo(user_id):
-    conn = connect_to_database()
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT photo FROM users WHERE user_id = %s", (user_id,))
-            photo = cursor.fetchone()
-            if photo:
-                return photo[0]
-    except psycopg2.Error as e:
-        print("Error fetching user photo:", e)
     finally:
         conn.close()
     return None
@@ -335,30 +335,3 @@ def save_user_age(user_id, age):
         finally:
             conn.close()
 
-
-def save_user_interest(user_id, interest):
-    conn = connect_to_database()
-    if conn:
-        try:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    "SELECT EXISTS(SELECT 1 FROM users WHERE user_id = %s)", (user_id,)
-                )
-                user_exists = cursor.fetchone()[0]
-
-                if user_exists:
-                    cursor.execute(
-                        "UPDATE users SET interest = %s WHERE user_id = %s",
-                        (interest, user_id),
-                    )
-                else:
-                    cursor.execute(
-                        "INSERT INTO users (user_id, interest) VALUES (%s, %s)",
-                        (user_id, interest),
-                    )
-            conn.commit()
-            logging.info(f"User {user_id} updated interest to {interest}")
-        except psycopg2.Error as e:
-            logging.error(f"Error saving user interest for user {user_id}: {e}")
-        finally:
-            conn.close()
